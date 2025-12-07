@@ -1,116 +1,74 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Kocan Seni Çok Seviyor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Özel Sayfa</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+            margin: 0;
+        }
 
-<style>
-  body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(120deg, #ff0080, #ff6699, #ff99cc);
-    font-family: "Arial";
-    overflow: hidden;
-    color: white;
-  }
+        #content {
+            text-align: center;
+        }
 
-  h1 {
-    font-size: 36px;
-    text-shadow: 0 0 10px #ff0077;
-    margin-bottom: 40px;
-  }
+        #photo {
+            width: 300px;
+            height: 300px;
+            background-size: cover;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
 
-  #heart {
-    font-size: 110px;
-    cursor: pointer;
-    transition: transform .2s;
-    user-select: none;
-  }
+        #heart {
+            font-size: 24px;
+            color: red;
+            margin-bottom: 20px;
+        }
 
-  #heart:active {
-    transform: scale(1.3);
-  }
-
-  .msg {
-    position: fixed;
-    left: 50%;
-    top: 65%;
-    transform: translateX(-50%);
-    background: #ff0066cc;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 14px;
-    font-size: 24px;
-    animation: fade 2s ease;
-  }
-
-  @keyframes fade {
-    0% {opacity: 0; transform: scale(0.6) translateX(-50%);}
-    30% {opacity: 1;}
-    100% {opacity: 0; transform: scale(1.3) translateX(-50%);}
-  }
-
-  .kiss {
-    position: fixed;
-    font-size: 35px;
-    animation: fly 2s linear;
-  }
-
-  @keyframes fly {
-    0% {opacity: 1; transform: translateY(0);}
-    100% {opacity: 0; transform: translateY(-200px);}
-  }
-</style>
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff7f7f;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
-
 <body>
+    <div id="content">
+        <div id="photo"></div>
+        <div id="heart"></div>
+        <button onclick="changeImageAndText()">Bir daha tıkla</button>
+    </div>
 
-<h1>Kocan seni çok seviyor ❤️</h1>
-<div id="heart">❤️</div>
+    <script>
+        const images = [
+            'foto1.jpg', 'foto2.jpg', 'foto3.jpg', // Fotoğraf URL'lerini buraya ekleyin
+        ];
+        const texts = [
+            'Sonsuza kadar seninle olmak istiyorum ❤️',
+            'Sen benim her şeyimsin!',
+            'Seninle her an bir ömre bedel!',
+            'Kalbim hep seninle ❤️',
+        ];
 
-<script>
-  const heart = document.getElementById("heart");
+        function changeImageAndText() {
+            const randomIndex = Math.floor(Math.random() * images.length);
+            document.getElementById('photo').style.backgroundImage = `url(${images[randomIndex]})`;
+            document.getElementById('heart').textContent = texts[randomIndex];
+        }
 
-  const hearts = ["❤️", "💖", "💘", "💓", "💞", "💕"];
-  const messages = [
-    "Affet beni sevgilim 💋",
-    "Seni çok seviyorum ❤️",
-    "Bir şans daha ver 💖",
-    "Özür dilerim güzelim 💋",
-    "Sensizlik zor 💞",
-    "Kalbim senin 💘"
-  ];
-
-  let index = 0;
-
-  heart.onclick = () => {
-
-    // kalp değişsin
-    heart.innerText = hearts[index];
-
-    // mesaj
-    let m = document.createElement("div");
-    m.className = "msg";
-    m.innerText = messages[index];
-    document.body.appendChild(m);
-    setTimeout(()=>m.remove(), 2000);
-
-    // öpücük animasyon
-    let k = document.createElement("div");
-    k.className = "kiss";
-    k.innerText = "💋";
-    k.style.left = Math.random()*80 + "%";
-    k.style.top = "70%";
-    document.body.appendChild(k);
-    setTimeout(()=>k.remove(), 2000);
-
-    index = (index + 1) % messages.length;
-  };
-</script>
-
+        // İlk başlangıç
+        changeImageAndText();
+    </script>
 </body>
 </html>
