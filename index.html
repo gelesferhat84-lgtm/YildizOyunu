@@ -19,3 +19,58 @@ h1 { font-size: 40px; }
 <p>Bu oyun senin için yapıldı.</p>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affet Beni Sevgilim</title>
+<style>
+    body {
+        background: #000;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+    .heart {
+        font-size: 90px;
+        cursor: pointer;
+        margin-top: 200px;
+        transition: 0.2s;
+    }
+    h2 {
+        margin-top: 20px;
+        font-size: 22px;
+        color: #ff4b4b;
+    }
+</style>
+</head>
+<body>
+
+<div class="heart" onclick="showMessage()">❤️</div>
+<h2 id="message">Beni affet sevgilim ❤️</h2>
+
+<script>
+let messages = [
+    "Özür dilerim",
+    "Affet beni sevgilim",
+    "Kalbini kırmak istemedim",
+    "Seni çok seviyorum",
+    "Senden başka kimsem yok",
+    "Bir daha olmayacak",
+    "Söz veriyorum",
+    "Kalbim hep seninle"
+];
+
+let i = 0;
+
+function showMessage() {
+    document.getElementById("message").innerText = messages[i];
+    i = (i + 1) % messages.length;
+}
+</script>
+
+</body>
+</html>
