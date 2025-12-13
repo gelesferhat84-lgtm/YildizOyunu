@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalp Sepeti ❤️</title>
+<title>Yıldız Oyunu 💖</title>
 
 <style>
 body {
     margin: 0;
     overflow: hidden;
-    background: linear-gradient(180deg, #1a1a2e, #16213e);
+    background: linear-gradient(180deg, #ffd1dc, #ff9aaf);
     font-family: Arial, sans-serif;
-    color: white;
+    color: black;
 }
 
 #hud {
@@ -19,31 +19,64 @@ body {
     top: 10px;
     left: 10px;
     font-size: 18px;
-    z-index: 10;
+    font-weight: bold;
+}
+
+#basket {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 55px;
 }
 
 .item {
     position: absolute;
     font-size: 36px;
+    font-weight: bold;
 }
 
-#basket {
+#slots {
     position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 50px;
+    bottom: 90px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.slot {
+    width: 40px;
+    height: 40px;
+    border: 2px solid black;
+    text-align: center;
+    line-height: 40px;
+    font-size: 24px;
+    font-weight: bold;
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud">❤️ Puan: <span id="score">0</span></div>
-<div id="basket">🧺</div>
+<div id="hud">Görev: YILDIZ kelimesini tamamla ⭐</div>
+
+<div id="slots">
+    <div class="slot"></div>
+    <div class="slot"></div>
+    <div class="slot"></div>
+    <div class="slot"></div>
+    <div class="slot"></div>
+    <div class="slot"></div>
+</div>
+
+<div id="basket">🎁</div>
 
 <script>
-let score = 0;
+const letters = ["Y","I","L","D","I","Z"];
+let filled = 0;
+let speed = 3;
+
 const basket = document.getElementById("basket");
 let basketX = window.innerWidth / 2;
 
@@ -57,35 +90,34 @@ document.addEventListener("mousemove", e => {
     basket.style.left = basketX + "px";
 });
 
-function createItem() {
+function createLetter() {
+    if (filled >= letters.length) return;
+
     const item = document.createElement("div");
     item.className = "item";
-
-    const isHeart = Math.random() > 0.4;
-    item.innerHTML = isHeart ? ["❤️","💛","💜","💙"][Math.floor(Math.random()*4)] : "🗑️";
-    item.dataset.type = isHeart ? "heart" : "trash";
-
+    item.innerText = letters[filled];
     item.style.left = Math.random() * (window.innerWidth - 40) + "px";
     item.style.top = "-40px";
     document.body.appendChild(item);
 
     let fall = setInterval(() => {
-        item.style.top = item.offsetTop + 4 + "px";
+        item.style.top = item.offsetTop + speed + "px";
 
-        const itemRect = item.getBoundingClientRect();
-        const basketRect = basket.getBoundingClientRect();
+        const iRect = item.getBoundingClientRect();
+        const bRect = basket.getBoundingClientRect();
 
         if (
-            itemRect.bottom > basketRect.top &&
-            itemRect.left < basketRect.right &&
-            itemRect.right > basketRect.left
+            iRect.bottom > bRect.top &&
+            iRect.left < bRect.right &&
+            iRect.right > bRect.left
         ) {
-            if (item.dataset.type === "heart") score++;
-            else score--;
-
-            document.getElementById("score").innerText = score;
+            document.querySelectorAll(".slot")[filled].innerText = letters[filled];
+            filled++;
+            speed += 0.6; // oyun hızlanıyor
             item.remove();
             clearInterval(fall);
+
+            if (filled === letters.length) endGame();
         }
 
         if (item.offsetTop > window.innerHeight) {
@@ -95,7 +127,13 @@ function createItem() {
     }, 20);
 }
 
-setInterval(createItem, 700);
+function endGame() {
+    setTimeout(() => {
+        alert("💖 Yıldız seni çok seviyor 💋");
+    }, 300);
+}
+
+setInterval(createLetter, 1200);
 </script>
 
 </body>
