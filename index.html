@@ -16,43 +16,45 @@ body{
 
 h1{margin:10px;}
 
-#info{font-size:20px;}
+#info{font-size:22px;}
 
 #basket{
   position:fixed;
-  bottom:10px;
+  bottom:120px;              /* ⬆️ sepet yukarı alındı */
   left:50%;
   transform:translateX(-50%);
-  font-size:60px;
+  font-size:80px;            /* ⬆️ sepet büyütüldü */
   cursor:grab;
 }
 
 .item{
   position:absolute;
-  font-size:40px;
+  font-size:55px;            /* ⬆️ emojiler büyütüldü */
 }
 
-.bad{filter:grayscale(100%) brightness(0.3);}
+.bad{
+  filter:grayscale(100%) brightness(0.3);
+}
 
 #slots{
   position:fixed;
-  bottom:90px;
+  bottom:20px;               /* ⬇️ kutular aşağı alındı */
   width:100%;
   display:flex;
   justify-content:center;
-  gap:10px;
+  gap:12px;
 }
 
 .slot{
-  width:40px;
-  height:40px;
+  width:45px;
+  height:45px;
   border:2px solid black;
   border-radius:8px;
-  font-size:24px;
+  font-size:26px;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(255,255,255,.5);
+  background:rgba(255,255,255,.6);
 }
 
 #message{
@@ -64,7 +66,7 @@ h1{margin:10px;}
   align-items:center;
   justify-content:center;
   flex-direction:column;
-  font-size:30px;
+  font-size:32px;
 }
 
 button{
@@ -105,14 +107,14 @@ let gameOver = false;
 const word = ["Y","I","L","D","I","Z"];
 let letterIndex = 0;
 
-// 6 kutu
+// kutular
 for(let i=0;i<6;i++){
   const s=document.createElement("div");
   s.className="slot";
   slotsDiv.appendChild(s);
 }
 
-// sepet sürükleme
+// sepet hareket
 document.addEventListener("mousemove",e=>{
   basket.style.left=e.clientX+"px";
 });
@@ -144,12 +146,16 @@ function createItem(){
     item.dataset.type="letter";
   }
 
-  item.style.left=Math.random()*(window.innerWidth-40)+"px";
-  item.style.top="-40px";
+  item.style.left=Math.random()*(window.innerWidth-60)+"px";
+  item.style.top="-60px";
   document.body.appendChild(item);
 
   let fall=setInterval(()=>{
-    if(gameOver){clearInterval(fall);item.remove();return;}
+    if(gameOver){
+      clearInterval(fall);
+      item.remove();
+      return;
+    }
 
     item.style.top=item.offsetTop+speed+"px";
 
@@ -204,13 +210,13 @@ function endGame(text){
   msgText.innerHTML=text;
 }
 
-// oyun zorlaşsın
+// zorlaşma
 setInterval(()=>{
   speed+=0.3;
   if(spawnRate>500) spawnRate-=50;
 },4000);
 
-// düşme
+// oyun döngüsü
 function loop(){
   if(!gameOver){
     createItem();
