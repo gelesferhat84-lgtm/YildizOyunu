@@ -3,120 +3,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalp Yakala ❤️</title>
+<title>Kalp Sepeti ❤️</title>
 
 <style>
 body {
     margin: 0;
     overflow: hidden;
-    background: radial-gradient(circle, #1e1e1e, #000);
+    background: linear-gradient(180deg, #1a1a2e, #16213e);
     font-family: Arial, sans-serif;
+    color: white;
 }
 
 #hud {
     position: fixed;
-    top: 15px;
-    left: 15px;
-    color: white;
+    top: 10px;
+    left: 10px;
     font-size: 18px;
     z-index: 10;
 }
 
-.heart {
+.item {
     position: absolute;
-    font-size: 38px;
-    cursor: pointer;
-    animation: fall linear forwards;
+    font-size: 36px;
 }
 
-@keyframes fall {
-    from { top: -60px; }
-    to { top: 100vh; }
-}
-
-.explode {
-    animation: pop 0.3s ease-out;
-}
-
-@keyframes pop {
-    to {
-        transform: scale(2);
-        opacity: 0;
-    }
-}
-
-#end {
-    display: none;
+#basket {
     position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    color: white;
-    text-align: center;
-    padding-top: 35vh;
-    z-index: 20;
-}
-
-#end h1 {
-    font-size: 30px;
-}
-
-#end p {
-    font-size: 20px;
-    margin-top: 10px;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 50px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud">
-    ⏱ Süre: <span id="time">30</span> sn<br>
-    ❤️ Puan: <span id="score">0</span>
-</div>
-
-<div id="end">
-    <h1>💖 Yıldız seni çok seviyor 💋</h1>
-    <p>Bu kalpler senin için</p>
-</div>
+<div id="hud">❤️ Puan: <span id="score">0</span></div>
+<div id="basket">🧺</div>
 
 <script>
 let score = 0;
-let time = 30;
-let gameOver = false;
+const basket = document.getElementById("basket");
+let basketX = window.innerWidth / 2;
 
-const timer = setInterval(() => {
-    time--;
-    document.getElementById("time").innerText = time;
-    if (time <= 0) endGame();
-}, 1000);
+document.addEventListener("touchmove", e => {
+    basketX = e.touches[0].clientX;
+    basket.style.left = basketX + "px";
+});
 
-function createHeart() {
-    if (gameOver) return;
+document.addEventListener("mousemove", e => {
+    basketX = e.clientX;
+    basket.style.left = basketX + "px";
+});
 
-    const heart = document.createElement("div");
-    heart.className = "heart";
-    heart.innerHTML = "❤️";
-    heart.style.left = Math.random() * 90 + "vw";
-    heart.style.animationDuration = (2 + Math.random() * 2) + "s";
-    document.body.appendChild(heart);
+function createItem() {
+    const item = document.createElement("div");
+    item.className = "item";
 
-    heart.onclick = () => {
-        score++;
-        document.getElementById("score").innerText = score;
-        heart.classList.add("explode");
-        setTimeout(() => heart.remove(), 300);
-    };
+    const isHeart = Math.random() > 0.4;
+    item.innerHTML = isHeart ? ["❤️","💛","💜","💙"][Math.floor(Math.random()*4)] : "🗑️";
+    item.dataset.type = isHeart ? "heart" : "trash";
 
-    setTimeout(() => heart.remove(), 4000);
+    item.style.left = Math.random() * (window.innerWidth - 40) + "px";
+    item.style.top = "-40px";
+    document.body.appendChild(item);
+
+    let fall = setInterval(() => {
+        item.style.top = item.offsetTop + 4 + "px";
+
+        const itemRect = item.getBoundingClientRect();
+        const basketRect = basket.getBoundingClientRect();
+
+        if (
+            itemRect.bottom > basketRect.top &&
+            itemRect.left < basketRect.right &&
+            itemRect.right > basketRect.left
+        ) {
+            if (item.dataset.type === "heart") score++;
+            else score--;
+
+            document.getElementById("score").innerText = score;
+            item.remove();
+            clearInterval(fall);
+        }
+
+        if (item.offsetTop > window.innerHeight) {
+            item.remove();
+            clearInterval(fall);
+        }
+    }, 20);
 }
 
-function endGame() {
-    gameOver = true;
-    clearInterval(timer);
-    document.getElementById("end").style.display = "block";
-}
-
-setInterval(createHeart, 500);
+setInterval(createItem, 700);
 </script>
 
 </body>
