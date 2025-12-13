@@ -3,81 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <title>Seni Çok Seviyorum ❤️</title>
+
 <style>
-    body {
-        margin: 0;
-        background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-        overflow: hidden;
-        font-family: 'Arial', sans-serif;
-        text-align: center;
-    }
+body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
 
-    h1 {
-        color: white;
-        margin-top: 15px;
-        text-shadow: 2px 2px 8px #ff4d6d;
-    }
+h1 {
+    color: white;
+    margin-top: 15px;
+    text-shadow: 2px 2px 8px #ff4d6d;
+}
 
-    #score {
-        color: white;
-        font-size: 22px;
-        margin-bottom: 5px;
-    }
+#score {
+    color: white;
+    font-size: 22px;
+}
 
-    #basket {
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 60px;
-        cursor: pointer;
-    }
+#basket {
+    position: absolute;
+    bottom: 20px;
+    font-size: 64px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: grab;
+    user-select: none;
+}
 
-    .item {
-        position: absolute;
-        top: -50px;
-        font-size: 48px;
-        animation: fall linear;
-    }
+.item {
+    position: absolute;
+    top: -50px;
+    font-size: 52px;
+    animation: fall linear;
+}
 
-    @keyframes fall {
-        to {
-            transform: translateY(110vh);
-        }
+@keyframes fall {
+    to {
+        transform: translateY(110vh);
     }
+}
 
-    #message {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.75);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        color: white;
-        font-size: 36px;
-        z-index: 10;
-        padding: 20px;
-    }
+#message {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    color: white;
+    font-size: 36px;
+    z-index: 10;
+}
 
-    #message button {
-        margin-top: 20px;
-        padding: 12px 25px;
-        font-size: 20px;
-        border: none;
-        border-radius: 12px;
-        background: #ff4d6d;
-        color: white;
-        cursor: pointer;
-    }
+#message button {
+    margin-top: 20px;
+    padding: 12px 25px;
+    font-size: 20px;
+    border: none;
+    border-radius: 12px;
+    background: #ff4d6d;
+    color: white;
+    cursor: pointer;
+}
 </style>
 </head>
+
 <body>
 
 <h1>❤️ Kocan Seni Çok Seviyor ❤️</h1>
 <div id="score">Skor: 0</div>
 
-<div id="basket">🧺</div>
+<div id="basket">🗑️</div>
 
 <div id="message">
     <div id="messageText"></div>
@@ -85,10 +86,10 @@
 </div>
 
 <script>
-let basket = document.getElementById("basket");
-let scoreEl = document.getElementById("score");
-let message = document.getElementById("message");
-let messageText = document.getElementById("messageText");
+const basket = document.getElementById("basket");
+const scoreEl = document.getElementById("score");
+const message = document.getElementById("message");
+const messageText = document.getElementById("messageText");
 
 let score = 0;
 let gameOver = false;
@@ -96,18 +97,40 @@ let gameOver = false;
 const goodItems = ["❤️","💋","😍","🥰","💖","A","Ş","K"];
 const badItems = ["💣","💔","🚀"];
 
+/* === KAYDIRMALI SEPET === */
+let dragging = false;
+
+basket.addEventListener("mousedown", () => dragging = true);
+document.addEventListener("mouseup", () => dragging = false);
+
 document.addEventListener("mousemove", e => {
-    basket.style.left = e.clientX + "px";
+    if (!dragging) return;
+    moveBasket(e.clientX);
 });
 
+basket.addEventListener("touchstart", () => dragging = true);
+document.addEventListener("touchend", () => dragging = false);
+
+document.addEventListener("touchmove", e => {
+    if (!dragging) return;
+    moveBasket(e.touches[0].clientX);
+});
+
+function moveBasket(x) {
+    let pos = x - basket.offsetWidth / 2;
+    pos = Math.max(0, Math.min(window.innerWidth - basket.offsetWidth, pos));
+    basket.style.left = pos + "px";
+}
+
+/* === OYUN === */
 function dropItem() {
     if (gameOver) return;
 
-    let item = document.createElement("div");
+    const item = document.createElement("div");
     item.className = "item";
 
-    let isBad = Math.random() < 0.35;
-    item.innerHTML = isBad
+    const isBad = Math.random() < 0.35;
+    item.textContent = isBad
         ? badItems[Math.floor(Math.random() * badItems.length)]
         : goodItems[Math.floor(Math.random() * goodItems.length)];
 
@@ -116,27 +139,27 @@ function dropItem() {
 
     document.body.appendChild(item);
 
-    let check = setInterval(() => {
-        let itemRect = item.getBoundingClientRect();
-        let basketRect = basket.getBoundingClientRect();
+    const check = setInterval(() => {
+        const r1 = item.getBoundingClientRect();
+        const r2 = basket.getBoundingClientRect();
 
         if (
-            itemRect.bottom >= basketRect.top &&
-            itemRect.left < basketRect.right &&
-            itemRect.right > basketRect.left
+            r1.bottom >= r2.top &&
+            r1.left < r2.right &&
+            r1.right > r2.left
         ) {
-            if (badItems.includes(item.innerHTML)) {
+            if (badItems.includes(item.textContent)) {
                 endGame(false);
             } else {
                 score++;
-                scoreEl.innerText = "Skor: " + score;
+                scoreEl.textContent = "Skor: " + score;
                 if (score >= 10) endGame(true);
             }
             item.remove();
             clearInterval(check);
         }
 
-        if (itemRect.top > window.innerHeight) {
+        if (r1.top > window.innerHeight) {
             item.remove();
             clearInterval(check);
         }
@@ -147,15 +170,15 @@ function endGame(win) {
     gameOver = true;
     message.style.display = "flex";
     messageText.innerHTML = win
-        ? "🎉 Kazandın Aşkım! 💖<br>Seni Çok Seviyorum 😘"
-        : "💔 Kaybettin 😢<br>Ama Ben Seni Hep Seveceğim ❤️";
+        ? "🎉 Kazandın Aşkım 💖<br>Seni Çok Seviyorum 😘"
+        : "💔 Kaybettin 😢<br>Ama Seni Hep Seveceğim ❤️";
 }
 
 function restart() {
     document.querySelectorAll(".item").forEach(i => i.remove());
     score = 0;
     gameOver = false;
-    scoreEl.innerText = "Skor: 0";
+    scoreEl.textContent = "Skor: 0";
     message.style.display = "none";
 }
 
