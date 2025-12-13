@@ -9,7 +9,7 @@
 body {
     margin: 0;
     overflow: hidden;
-    background: linear-gradient(180deg, #ffd1dc, #ff9aaf);
+    background: pink;
     font-family: Arial, sans-serif;
     color: black;
 }
@@ -18,13 +18,13 @@ body {
     position: fixed;
     top: 10px;
     left: 10px;
-    font-size: 18px;
     font-weight: bold;
+    font-size: 18px;
 }
 
 #basket {
     position: fixed;
-    bottom: 20px;
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
     font-size: 55px;
@@ -33,7 +33,6 @@ body {
 .item {
     position: absolute;
     font-size: 36px;
-    font-weight: bold;
 }
 
 #slots {
@@ -46,20 +45,20 @@ body {
 }
 
 .slot {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border: 2px solid black;
     text-align: center;
-    line-height: 40px;
-    font-size: 24px;
+    line-height: 38px;
     font-weight: bold;
+    font-size: 22px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud">Görev: YILDIZ kelimesini tamamla ⭐</div>
+<div id="hud">⭐❤️ Kalpleri topla — YILDIZ harflerini tamamla</div>
 
 <div id="slots">
     <div class="slot"></div>
@@ -70,32 +69,49 @@ body {
     <div class="slot"></div>
 </div>
 
-<div id="basket">🎁</div>
+<div id="basket">🗑️</div>
 
 <script>
-const letters = ["Y","I","L","D","I","Z"];
-let filled = 0;
-let speed = 3;
-
 const basket = document.getElementById("basket");
 let basketX = window.innerWidth / 2;
-
-document.addEventListener("touchmove", e => {
-    basketX = e.touches[0].clientX;
-    basket.style.left = basketX + "px";
-});
 
 document.addEventListener("mousemove", e => {
     basketX = e.clientX;
     basket.style.left = basketX + "px";
 });
 
-function createLetter() {
-    if (filled >= letters.length) return;
+document.addEventListener("touchmove", e => {
+    basketX = e.touches[0].clientX;
+    basket.style.left = basketX + "px";
+});
+
+const letters = ["Y","I","L","D","I","Z"];
+let letterIndex = 0;
+let speed = 3;
+let gameOver = false;
+
+function createItem() {
+    if (gameOver) return;
 
     const item = document.createElement("div");
     item.className = "item";
-    item.innerText = letters[filled];
+
+    const r = Math.random();
+
+    if (r < 0.45) {
+        item.innerText = "❤️";
+        item.dataset.type = "good";
+    } else if (r < 0.8) {
+        item.innerText = "⭐";
+        item.dataset.type = "good";
+    } else if (r < 0.9 && letterIndex < letters.length) {
+        item.innerText = letters[letterIndex];
+        item.dataset.type = "letter";
+    } else {
+        item.innerText = "💣";
+        item.dataset.type = "bomb";
+    }
+
     item.style.left = Math.random() * (window.innerWidth - 40) + "px";
     item.style.top = "-40px";
     document.body.appendChild(item);
@@ -103,21 +119,29 @@ function createLetter() {
     let fall = setInterval(() => {
         item.style.top = item.offsetTop + speed + "px";
 
-        const iRect = item.getBoundingClientRect();
-        const bRect = basket.getBoundingClientRect();
+        const i = item.getBoundingClientRect();
+        const b = basket.getBoundingClientRect();
 
         if (
-            iRect.bottom > bRect.top &&
-            iRect.left < bRect.right &&
-            iRect.right > bRect.left
+            i.bottom > b.top &&
+            i.left < b.right &&
+            i.right > b.left
         ) {
-            document.querySelectorAll(".slot")[filled].innerText = letters[filled];
-            filled++;
-            speed += 0.6; // oyun hızlanıyor
+            if (item.dataset.type === "bomb") {
+                endGame("💣 Bombaya bastın!");
+            }
+
+            if (item.dataset.type === "letter") {
+                document.querySelectorAll(".slot")[letterIndex].innerText = letters[letterIndex];
+                letterIndex++;
+                speed += 0.6;
+                if (letterIndex === letters.length) {
+                    endGame("💖 Yıldız seni çok seviyor 💋");
+                }
+            }
+
             item.remove();
             clearInterval(fall);
-
-            if (filled === letters.length) endGame();
         }
 
         if (item.offsetTop > window.innerHeight) {
@@ -127,13 +151,12 @@ function createLetter() {
     }, 20);
 }
 
-function endGame() {
-    setTimeout(() => {
-        alert("💖 Yıldız seni çok seviyor 💋");
-    }, 300);
+function endGame(msg) {
+    gameOver = true;
+    setTimeout(() => alert(msg), 200);
 }
 
-setInterval(createLetter, 1200);
+setInterval(createItem, 800);
 </script>
 
 </body>
