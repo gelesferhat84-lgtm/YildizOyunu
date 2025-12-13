@@ -2,146 +2,205 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalp Oyunu 💖</title>
-
+<title>Emoji Harf Oyunu</title>
 <style>
-body {
-    margin: 0;
-    overflow: hidden;
-    background: linear-gradient(180deg, #ffd1dc, #ff9aaf);
-    font-family: Arial, sans-serif;
-    color: black;
-}
+    body {
+        margin: 0;
+        background: #0f172a;
+        color: white;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        text-align: center;
+    }
 
-#hud {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    font-weight: bold;
-    font-size: 18px;
-    z-index: 10;
-}
+    h1 {
+        margin: 10px;
+    }
 
-#basket {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 48px;
-}
+    #game {
+        position: relative;
+        width: 100%;
+        height: 80vh;
+        border-bottom: 3px solid white;
+    }
 
-.item {
-    position: absolute;
-    font-size: 34px;
-}
+    .item {
+        position: absolute;
+        font-size: 48px; /* EMOJİLER BÜYÜK */
+        cursor: pointer;
+        user-select: none;
+    }
 
-#slots {
-    position: fixed;
-    bottom: 10px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-}
+    .letter {
+        color: #38bdf8;
+        font-weight: bold;
+        font-size: 42px;
+    }
 
-.slot {
-    width: 30px;
-    height: 30px;
-    border: 2px solid black;
-}
+    #slots {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .slot {
+        width: 40px;
+        height: 40px;
+        border: 2px solid white;
+        font-size: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #message {
+        font-size: 40px;
+        margin-top: 30px;
+        display: none;
+    }
+
+    .confetti {
+        position: absolute;
+        font-size: 30px;
+        animation: fall 3s linear forwards;
+    }
+
+    @keyframes fall {
+        to {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
 </style>
 </head>
-
 <body>
 
-<div id="hud">
-Puan: <span id="score">0</span><br>
-Rekor: <span id="best">0</span>
-</div>
+<h1>Emoji Harf Oyunu</h1>
 
-<div id="basket">🗑️</div>
+<div id="game"></div>
 
-<div id="slots">
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-</div>
+<div id="slots"></div>
+
+<div id="message"></div>
 
 <script>
-let score = 0;
-let speed = 3;
+const game = document.getElementById("game");
+const slotsDiv = document.getElementById("slots");
+const message = document.getElementById("message");
+
+const targetWord = "ASK"; // kazanma kelimesi
+let collected = [];
 let gameOver = false;
 
-const basket = document.getElementById("basket");
-const scoreEl = document.getElementById("score");
-const bestEl = document.getElementById("best");
-
-let best = localStorage.getItem("bestScore") || 0;
-bestEl.innerText = best;
-
-document.addEventListener("mousemove", e => basket.style.left = e.clientX + "px");
-document.addEventListener("touchmove", e => basket.style.left = e.touches[0].clientX + "px");
-
-function randomItem() {
-    const r = Math.random();
-    if (r < 0.4) return {icon:["❤️","💛","💙","💜"][Math.floor(Math.random()*4)], val: +1};
-    if (r < 0.55) return {icon:"⭐", val: +2};
-    if (r < 0.7) return {icon:"💔", val: -2};
-    if (r < 0.85) return {icon:"💣", val: -4};
-    if (r < 0.93) return {icon:"🍎", val: 0};
-    return {icon:"🚀", val:"end"};
+// Alt kutucukları oluştur
+for (let i = 0; i < targetWord.length; i++) {
+    const s = document.createElement("div");
+    s.className = "slot";
+    slotsDiv.appendChild(s);
 }
 
-function createItem() {
+// Oyun nesnesi oluştur
+function spawnItem() {
     if (gameOver) return;
 
-    const data = randomItem();
     const item = document.createElement("div");
     item.className = "item";
-    item.innerText = data.icon;
-    item.style.left = Math.random() * (window.innerWidth - 40) + "px";
-    item.style.top = "-40px";
-    document.body.appendChild(item);
 
-    let fall = setInterval(() => {
-        item.style.top = item.offsetTop + speed + "px";
+    const rand = Math.random();
 
-        const i = item.getBoundingClientRect();
-        const b = basket.getBoundingClientRect();
+    if (rand < 0.6) {
+        // HARF
+        const letter = targetWord[Math.floor(Math.random() * targetWord.length)];
+        item.textContent = letter;
+        item.classList.add("letter");
 
-        if (i.bottom > b.top && i.left < b.right && i.right > b.left) {
-            if (data.val === "end") return endGame();
-            score += data.val;
-            if (score < 0) score = 0;
-            scoreEl.innerText = score;
-            speed += 0.2;
+        item.onclick = () => {
+            if (gameOver) return;
+            collected.push(letter);
+            updateSlots();
             item.remove();
+            checkWin();
+        };
+
+    } else if (rand < 0.85) {
+        // BOMBA
+        item.textContent = "💣";
+        item.onclick = () => item.remove();
+
+    } else {
+        // FÜZE → OYUN BİTER
+        item.textContent = "🚀";
+        item.onclick = () => endGame(false);
+    }
+
+    item.style.left = Math.random() * (window.innerWidth - 50) + "px";
+    item.style.top = "-50px";
+
+    game.appendChild(item);
+
+    let y = -50;
+    const fall = setInterval(() => {
+        if (gameOver) {
             clearInterval(fall);
+            item.remove();
+            return;
         }
 
-        if (item.offsetTop > window.innerHeight) {
-            item.remove();
+        y += 2;
+        item.style.top = y + "px";
+
+        if (y > game.clientHeight) {
             clearInterval(fall);
+            item.remove();
         }
     }, 20);
 }
 
-function endGame() {
-    gameOver = true;
-    if (score > best) {
-        localStorage.setItem("bestScore", score);
-    }
-    setTimeout(() => {
-        alert("💖 Ferhat seni çok seviyor ❤️");
-        location.reload();
-    }, 300);
+// Kutucukları güncelle
+function updateSlots() {
+    const slots = document.querySelectorAll(".slot");
+    slots.forEach((s, i) => {
+        s.textContent = collected[i] || "";
+    });
 }
 
-setInterval(createItem, 800);
+// Kazanma kontrolü
+function checkWin() {
+    if (collected.length === targetWord.length) {
+        endGame(true);
+    }
+}
+
+// Oyun bitir
+function endGame(win) {
+    gameOver = true;
+    message.style.display = "block";
+
+    if (win) {
+        message.textContent = "🎉 KAZANDIN! 🎉";
+        celebration();
+    } else {
+        message.textContent = "💥 KAYBETTİN!";
+    }
+}
+
+// Kutlama efekti
+function celebration() {
+    for (let i = 0; i < 40; i++) {
+        const c = document.createElement("div");
+        c.className = "confetti";
+        c.textContent = ["🎉","❤️","✨","💖"][Math.floor(Math.random()*4)];
+        c.style.left = Math.random() * window.innerWidth + "px";
+        c.style.top = "-30px";
+        document.body.appendChild(c);
+
+        setTimeout(() => c.remove(), 3000);
+    }
+}
+
+// Sürekli nesne üret
+setInterval(spawnItem, 800);
 </script>
 
 </body>
