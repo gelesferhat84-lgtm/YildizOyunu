@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Yıldız Oyunu ⭐</title>
+<title>Aşk Oyunu 💖</title>
 
 <style>
 body{
@@ -11,51 +11,60 @@ body{
   overflow:hidden;
   font-family:Arial;
   text-align:center;
+  color:black;
 }
 
-h1{
-  color:white;
-  margin:10px;
+h1{margin:10px;}
+
+#info{font-size:20px;}
+
+#basket{
+  position:fixed;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:60px;
+  cursor:grab;
 }
+
+.item{
+  position:absolute;
+  font-size:40px;
+}
+
+.bad{filter:grayscale(100%) brightness(0.3);}
 
 #slots{
   position:fixed;
-  bottom:30px;
+  bottom:90px;
   width:100%;
   display:flex;
   justify-content:center;
-  gap:12px;
+  gap:10px;
 }
 
 .slot{
-  width:50px;
-  height:50px;
-  border:3px solid white;
-  border-radius:12px;
-  font-size:32px;
-  color:white;
+  width:40px;
+  height:40px;
+  border:2px solid black;
+  border-radius:8px;
+  font-size:24px;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(255,255,255,0.25);
-}
-
-.letter{
-  position:absolute;
-  font-size:42px;
-  color:white;
+  background:rgba(255,255,255,.5);
 }
 
 #message{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.85);
+  background:rgba(0,0,0,.85);
+  color:white;
   display:none;
   align-items:center;
   justify-content:center;
   flex-direction:column;
-  color:white;
-  font-size:32px;
+  font-size:30px;
 }
 
 button{
@@ -70,9 +79,11 @@ button{
 
 <body>
 
-<h1>Kocan Seni Çok Seviyor 💖</h1>
+<h1>Aşk Oyunu 💕</h1>
+<div id="info">Skor: <span id="score">0</span></div>
 
 <div id="slots"></div>
+<div id="basket">🗑️</div>
 
 <div id="message">
   <div id="msgText"></div>
@@ -80,70 +91,133 @@ button{
 </div>
 
 <script>
-const word = ["Y","I","L","D","I","Z"];
+const basket = document.getElementById("basket");
+const scoreText = document.getElementById("score");
 const slotsDiv = document.getElementById("slots");
 const message = document.getElementById("message");
 const msgText = document.getElementById("msgText");
 
-let filled = 0;
+let score = 0;
+let speed = 3;
+let spawnRate = 1200;
+let gameOver = false;
 
-// 6 kutu oluştur
-word.forEach(()=>{
-  const s = document.createElement("div");
-  s.className = "slot";
+const word = ["Y","I","L","D","I","Z"];
+let letterIndex = 0;
+
+// 6 kutu
+for(let i=0;i<6;i++){
+  const s=document.createElement("div");
+  s.className="slot";
   slotsDiv.appendChild(s);
+}
+
+// sepet sürükleme
+document.addEventListener("mousemove",e=>{
+  basket.style.left=e.clientX+"px";
+});
+document.addEventListener("touchmove",e=>{
+  basket.style.left=e.touches[0].clientX+"px";
 });
 
-function dropLetter(){
-  const letter = document.createElement("div");
-  letter.className = "letter";
+function createItem(){
+  if(gameOver) return;
 
-  // kelimedeki harflerden biri düşsün
-  letter.textContent = word[Math.floor(Math.random()*word.length)];
-  letter.style.left = Math.random()*(window.innerWidth-40)+"px";
-  letter.style.top = "-40px";
-  document.body.appendChild(letter);
+  const item=document.createElement("div");
+  item.className="item";
 
-  let fall = setInterval(()=>{
-    letter.style.top = letter.offsetTop + 3 + "px";
+  const r=Math.random();
 
-    const slots = document.querySelectorAll(".slot");
-    slots.forEach((slot,i)=>{
-      if(slot.textContent===""){
-        const r1 = letter.getBoundingClientRect();
-        const r2 = slot.getBoundingClientRect();
+  if(r<0.4){
+    item.textContent=Math.random()<0.5?"❤️":"💋";
+    item.dataset.type="good";
+  }else if(r<0.55){
+    item.textContent="💣";
+    item.dataset.type="bomb";
+    item.classList.add("bad");
+  }else if(r<0.65){
+    item.textContent="🚀";
+    item.dataset.type="rocket";
+    item.classList.add("bad");
+  }else{
+    item.textContent=word[Math.floor(Math.random()*word.length)];
+    item.dataset.type="letter";
+  }
 
-        if(
-          r1.bottom > r2.top &&
-          r1.left < r2.right &&
-          r1.right > r2.left
-        ){
-          slot.textContent = word[i];
-          filled++;
-          letter.remove();
-          clearInterval(fall);
+  item.style.left=Math.random()*(window.innerWidth-40)+"px";
+  item.style.top="-40px";
+  document.body.appendChild(item);
 
-          if(filled === word.length){
+  let fall=setInterval(()=>{
+    if(gameOver){clearInterval(fall);item.remove();return;}
+
+    item.style.top=item.offsetTop+speed+"px";
+
+    const r1=item.getBoundingClientRect();
+    const r2=basket.getBoundingClientRect();
+
+    if(
+      r1.bottom>r2.top &&
+      r1.left<r2.right &&
+      r1.right>r2.left
+    ){
+      if(item.dataset.type==="good"){
+        score++;
+      }
+      else if(item.dataset.type==="bomb"){
+        score=Math.max(0,score-1);
+      }
+      else if(item.dataset.type==="rocket"){
+        endGame("🚀 Kaybettin!");
+      }
+      else if(item.dataset.type==="letter"){
+        if(letterIndex<6){
+          slotsDiv.children[letterIndex].textContent=word[letterIndex];
+          letterIndex++;
+          if(letterIndex===6){
             winGame();
           }
         }
       }
-    });
 
-    if(letter.offsetTop > window.innerHeight){
-      letter.remove();
+      scoreText.textContent=score;
+      item.remove();
+      clearInterval(fall);
+    }
+
+    if(item.offsetTop>window.innerHeight){
+      item.remove();
       clearInterval(fall);
     }
   },20);
 }
 
 function winGame(){
+  gameOver=true;
   message.style.display="flex";
-  msgText.innerHTML="🎆🎉 KAZANDIN 🎉🎆<br>YILDIZ tamamlandı ⭐";
+  msgText.innerHTML="🎉🎆 KAZANDIN 🎆🎉<br>Kocan seni çok seviyor 💖";
 }
 
-// Harfler ara sıra insin
-setInterval(dropLetter, 1500);
+function endGame(text){
+  gameOver=true;
+  message.style.display="flex";
+  msgText.innerHTML=text;
+}
+
+// oyun zorlaşsın
+setInterval(()=>{
+  speed+=0.3;
+  if(spawnRate>500) spawnRate-=50;
+},4000);
+
+// düşme
+function loop(){
+  if(!gameOver){
+    createItem();
+    setTimeout(loop,spawnRate);
+  }
+}
+loop();
 </script>
 
 </body>
