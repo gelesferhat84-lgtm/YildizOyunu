@@ -3,160 +3,152 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Yıldız Oyunu 💖</title>
+<title>Kalp Oyunu ❤️</title>
 
 <style>
-body {
-    margin: 0;
-    overflow: hidden;
-    background: pink;
-    font-family: Arial, sans-serif;
-    color: black;
+body{
+    margin:0;
+    overflow:hidden;
+    background:linear-gradient(#ffd1dc,#ff9ab3);
+    font-family:Arial,sans-serif;
+    color:black;
 }
 
-#hud {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    font-weight: bold;
-    font-size: 18px;
+#hud{
+    position:fixed;
+    top:10px;
+    left:10px;
+    font-weight:bold;
+    font-size:18px;
+    z-index:10;
 }
 
-#basket {
-    position: fixed;
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 55px;
+#basket{
+    position:fixed;
+    bottom:90px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:55px;
 }
 
-.item {
-    position: absolute;
-    font-size: 36px;
+.item{
+    position:absolute;
+    font-size:36px;
 }
 
-#slots {
-    position: fixed;
-    bottom: 90px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
+#slots{
+    position:fixed;
+    bottom:20px;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    gap:6px;
 }
 
-.slot {
-    width: 38px;
-    height: 38px;
-    border: 2px solid black;
-    text-align: center;
-    line-height: 38px;
-    font-weight: bold;
-    font-size: 22px;
+.slot{
+    width:28px;
+    height:28px;
+    border:2px solid black;
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud">⭐❤️ Kalpleri topla — YILDIZ harflerini tamamla</div>
-
-<div id="slots">
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
-    <div class="slot"></div>
+<div id="hud">
+Skor: <span id="score">0</span><br>
+Rekor: <span id="best">0</span>
 </div>
 
 <div id="basket">🗑️</div>
 
+<div id="slots">
+<div class="slot"></div><div class="slot"></div><div class="slot"></div>
+<div class="slot"></div><div class="slot"></div><div class="slot"></div>
+</div>
+
 <script>
-const basket = document.getElementById("basket");
-let basketX = window.innerWidth / 2;
+let score=0;
+let speed=3;
+let gameOver=false;
 
-document.addEventListener("mousemove", e => {
-    basketX = e.clientX;
-    basket.style.left = basketX + "px";
+const bestEl=document.getElementById("best");
+bestEl.innerText=localStorage.getItem("bestScore")||0;
+
+const basket=document.getElementById("basket");
+
+document.addEventListener("mousemove",e=>{
+    basket.style.left=e.clientX+"px";
+});
+document.addEventListener("touchmove",e=>{
+    basket.style.left=e.touches[0].clientX+"px";
 });
 
-document.addEventListener("touchmove", e => {
-    basketX = e.touches[0].clientX;
-    basket.style.left = basketX + "px";
-});
+function createItem(){
+    if(gameOver) return;
 
-const letters = ["Y","I","L","D","I","Z"];
-let letterIndex = 0;
-let speed = 3;
-let gameOver = false;
+    const r=Math.random();
+    let type,icon;
 
-function createItem() {
-    if (gameOver) return;
+    if(r<0.35){ type="heart"; icon=["❤️","💛","💙","💜"][Math.floor(Math.random()*4)]; }
+    else if(r<0.5){ type="star"; icon="⭐"; }
+    else if(r<0.65){ type="broken"; icon="💔"; }
+    else if(r<0.82){ type="bomb"; icon="💣"; }
+    else { type="rocket"; icon="🚀"; }
 
-    const item = document.createElement("div");
-    item.className = "item";
-
-    const r = Math.random();
-
-    if (r < 0.45) {
-        item.innerText = "❤️";
-        item.dataset.type = "good";
-    } else if (r < 0.8) {
-        item.innerText = "⭐";
-        item.dataset.type = "good";
-    } else if (r < 0.9 && letterIndex < letters.length) {
-        item.innerText = letters[letterIndex];
-        item.dataset.type = "letter";
-    } else {
-        item.innerText = "💣";
-        item.dataset.type = "bomb";
-    }
-
-    item.style.left = Math.random() * (window.innerWidth - 40) + "px";
-    item.style.top = "-40px";
+    const item=document.createElement("div");
+    item.className="item";
+    item.innerText=icon;
+    item.dataset.type=type;
+    item.style.left=Math.random()*(window.innerWidth-40)+"px";
+    item.style.top="-40px";
     document.body.appendChild(item);
 
-    let fall = setInterval(() => {
-        item.style.top = item.offsetTop + speed + "px";
+    let fall=setInterval(()=>{
+        item.style.top=item.offsetTop+speed+"px";
 
-        const i = item.getBoundingClientRect();
-        const b = basket.getBoundingClientRect();
+        const i=item.getBoundingClientRect();
+        const b=basket.getBoundingClientRect();
 
-        if (
-            i.bottom > b.top &&
-            i.left < b.right &&
-            i.right > b.left
-        ) {
-            if (item.dataset.type === "bomb") {
-                endGame("💣 Bombaya bastın!");
-            }
-
-            if (item.dataset.type === "letter") {
-                document.querySelectorAll(".slot")[letterIndex].innerText = letters[letterIndex];
-                letterIndex++;
-                speed += 0.6;
-                if (letterIndex === letters.length) {
-                    endGame("💖 Yıldız seni çok seviyor 💋");
-                }
-            }
-
+        if(i.bottom>b.top && i.left<b.right && i.right>b.left){
+            handleHit(type);
             item.remove();
             clearInterval(fall);
         }
 
-        if (item.offsetTop > window.innerHeight) {
+        if(item.offsetTop>window.innerHeight){
             item.remove();
             clearInterval(fall);
         }
-    }, 20);
+    },20);
 }
 
-function endGame(msg) {
-    gameOver = true;
-    setTimeout(() => alert(msg), 200);
+function handleHit(type){
+    if(type==="heart") score+=1;
+    if(type==="star") score+=2;
+    if(type==="broken") score-=2;
+    if(type==="bomb"||type==="rocket") endGame();
+
+    document.getElementById("score").innerText=score;
 }
 
-setInterval(createItem, 800);
+function endGame(){
+    gameOver=true;
+    let best=localStorage.getItem("bestScore")||0;
+    if(score>best){
+        localStorage.setItem("bestScore",score);
+    }
+    setTimeout(()=>{
+        alert("💖 Ferhat seni çok seviyor ❤️");
+        location.reload();
+    },300);
+}
+
+setInterval(()=>{
+    speed+=0.15;
+},5000);
+
+setInterval(createItem,700);
 </script>
 
 </body>
