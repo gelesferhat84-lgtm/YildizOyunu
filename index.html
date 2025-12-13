@@ -1,74 +1,84 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Özel Sayfa</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f7f7f7;
-            font-family: Arial, sans-serif;
-            margin: 0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalp Oyunu ❤️</title>
 
-        #content {
-            text-align: center;
-        }
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, #ff758c, #ff7eb3);
+        font-family: Arial, sans-serif;
+    }
 
-        #photo {
-            width: 300px;
-            height: 300px;
-            background-size: cover;
-            border-radius: 50%;
-            margin-bottom: 20px;
-        }
+    #score {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        color: white;
+        font-size: 22px;
+        font-weight: bold;
+        z-index: 10;
+    }
 
-        #heart {
-            font-size: 24px;
-            color: red;
-            margin-bottom: 20px;
-        }
+    .heart {
+        position: absolute;
+        font-size: 32px;
+        cursor: pointer;
+        animation: fall 4s linear forwards;
+    }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #ff7f7f;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
+    @keyframes fall {
+        from { top: -40px; }
+        to { top: 100vh; }
+    }
+
+    #win {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        font-size: 28px;
+        text-align: center;
+        padding-top: 40vh;
+        z-index: 20;
+    }
+</style>
 </head>
+
 <body>
-    <div id="content">
-        <div id="photo"></div>
-        <div id="heart"></div>
-        <button onclick="changeImageAndText()">Bir daha tıkla</button>
-    </div>
 
-    <script>
-        const images = [
-            'foto1.jpg', 'foto2.jpg', 'foto3.jpg', // Fotoğraf URL'lerini buraya ekleyin
-        ];
-        const texts = [
-            'Sonsuza kadar seninle olmak istiyorum ❤️',
-            'Sen benim her şeyimsin!',
-            'Seninle her an bir ömre bedel!',
-            'Kalbim hep seninle ❤️',
-        ];
+<div id="score">Puan: 0</div>
+<div id="win">💖 Seni çok seviyorum 💋</div>
 
-        function changeImageAndText() {
-            const randomIndex = Math.floor(Math.random() * images.length);
-            document.getElementById('photo').style.backgroundImage = `url(${images[randomIndex]})`;
-            document.getElementById('heart').textContent = texts[randomIndex];
+<script>
+let score = 0;
+
+function createHeart() {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.innerHTML = "❤️";
+    heart.style.left = Math.random() * 90 + "vw";
+    document.body.appendChild(heart);
+
+    heart.onclick = () => {
+        score++;
+        document.getElementById("score").innerText = "Puan: " + score;
+        heart.remove();
+
+        if (score >= 10) {
+            document.getElementById("win").style.display = "block";
         }
+    };
 
-        // İlk başlangıç
-        changeImageAndText();
-    </script>
+    setTimeout(() => heart.remove(), 4000);
+}
+
+setInterval(createHeart, 800);
+</script>
+
 </body>
 </html>
