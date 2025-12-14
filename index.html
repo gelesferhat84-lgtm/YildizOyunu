@@ -1,265 +1,222 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Nebula Glass Game</title>
+<meta charset="UTF-8" />
+<title>Nebula Bit Game</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  height:100vh;overflow:hidden;
-  background:
-    radial-gradient(circle at 20% 30%, #6a1fa0, transparent 40%),
-    radial-gradient(circle at 80% 20%, #ff4fd8, transparent 45%),
-    radial-gradient(circle at 50% 80%, #1b0a3d, transparent 50%),
-    #05010a;
-  font-family:Arial, sans-serif;
+html,body{
+  margin:0; padding:0;
+  width:100%; height:100%;
+  overflow:hidden;
+  background: radial-gradient(circle at top, #4b0066, #050014 70%);
+  font-family: Arial, sans-serif;
+  user-select:none;
 }
-
-/* UI */
-#score{
-  position:absolute;top:12px;left:12px;
-  color:white;font-size:18px;
-  text-shadow:0 0 12px gold;
+#game{
+  position:relative;
+  width:100%;
+  height:100%;
 }
-#lives{
-  position:absolute;top:38px;left:12px;
-  color:pink;font-size:20px;
-}
-
-/* Glass Panel */
-#glassPanel{
+#hud{
   position:absolute;
-  bottom:120px;
+  top:10px; left:10px;
+  background:rgba(0,0,0,.4);
+  color:#fff;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:16px;
+}
+#hearts{ margin-top:4px; }
+
+#panel{
+  position:absolute;
+  bottom:80px;
   left:50%;
   transform:translateX(-50%);
-  width:42%;
-  height:80px;
-  border-radius:26px;
-  background:linear-gradient(
-    135deg,
-    rgba(255,150,220,.35),
-    rgba(255,150,220,.1)
-  );
-  backdrop-filter:blur(20px);
-  border:1px solid rgba(255,180,230,.6);
-  box-shadow:
-    inset 0 0 26px rgba(255,180,230,.4),
-    0 0 36px rgba(255,100,200,.4);
+  width:120px;
+  height:25px;
+  background:rgba(255,120,180,.35);
+  border:1px solid rgba(255,180,220,.8);
+  border-radius:20px;
+  backdrop-filter: blur(6px);
 }
 
-/* Letter boxes */
-#letterBoxes{
+.letter{
   position:absolute;
-  bottom:26px;
+  font-size:32px;
+  font-weight:bold;
+  color:#ffd800;
+  text-shadow:0 0 15px #ffeb3b;
+}
+.star{
+  position:absolute;
+  font-size:28px;
+}
+.meteor{
+  position:absolute;
+  width:40px;
+  height:40px;
+  background:radial-gradient(circle,#777,#333);
+  border-radius:50%;
+}
+.meteor::before{
+  content:'';
+  position:absolute;
+  top:-25px; left:50%;
+  transform:translateX(-50%);
+  width:8px; height:30px;
+  background:linear-gradient(#ff9800, transparent);
+}
+
+.alien{
+  position:absolute;
+  width:50px; height:30px;
+  background:rgba(180,255,255,.35);
+  border:1px solid rgba(200,255,255,.8);
+  border-radius:50% 50% 40% 40%;
+}
+
+.bullet{
+  position:absolute;
+  width:14px; height:14px;
+  background:#ff5555;
+  border-radius:50%;
+}
+
+.boxes{
+  position:absolute;
+  bottom:10px;
   left:50%;
   transform:translateX(-50%);
-  display:flex;gap:14px;
+  display:flex;
+  gap:10px;
 }
 .box{
-  width:58px;height:58px;
-  border-radius:16px;
-  background:rgba(255,150,220,.18);
-  backdrop-filter:blur(10px);
-  border:1px solid rgba(255,180,230,.5);
+  width:45px; height:45px;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.6);
+  border-radius:8px;
+  color:#ffd800;
+  font-size:22px;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:28px;
-  color:white;
-  text-shadow:0 0 12px gold;
 }
 
-/* Objects */
-.star,.meteor,.heart,.letter{
-  position:absolute;top:-100px;
-}
-.star{
-  font-size:48px;
-  text-shadow:
-    0 0 20px gold,
-    0 0 40px gold;
-}
-.letter{
-  font-size:46px;
-  text-shadow:0 0 20px gold;
-}
-.meteor{
-  font-size:54px;
-}
-.meteor::before{
-  content:"🔥";
+#gameover{
   position:absolute;
-  top:-26px;
-  left:10px;
-  font-size:28px;
-  filter:blur(1px);
-}
-.heart{
-  font-size:36px;
-}
-
-/* Game over */
-#overlay{
-  position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
   display:none;
   align-items:center;
   justify-content:center;
+  background:rgba(0,0,0,.7);
+  color:#fff;
   flex-direction:column;
-  color:white;
 }
-#overlay button{
-  margin-top:20px;
-  padding:12px 24px;
-  font-size:16px;
-  border-radius:10px;
+button{
+  padding:10px 20px;
+  margin-top:10px;
+  font-size:18px;
 }
 </style>
 </head>
-
 <body>
+<div id="game">
+  <div id="hud">
+    Skor: <span id="score">0</span>
+    <div id="hearts">❤️❤️❤️</div>
+  </div>
 
-<div id="score">Skor: 0</div>
-<div id="lives">❤️❤️❤️</div>
+  <div id="panel"></div>
 
-<div id="glassPanel"></div>
-<div id="letterBoxes"></div>
+  <div class="boxes" id="boxes"></div>
 
-<div id="overlay">
-  <h2>Oyun Bitti</h2>
-  <button onclick="location.reload()">Tekrar Oyna</button>
+  <div id="gameover">
+    <h1>Oyun Bitti</h1>
+    <button onclick="location.reload()">Tekrar Oyna</button>
+  </div>
 </div>
 
 <script>
-/* Panel movement */
-const panel=document.getElementById("glassPanel");
-let tx=innerWidth/2,cx=tx;
-document.addEventListener("mousemove",e=>tx=e.clientX);
-document.addEventListener("touchmove",e=>tx=e.touches[0].clientX);
-(function move(){
-  cx+=(tx-cx)*.35;
-  panel.style.left=cx+"px";
-  requestAnimationFrame(move);
-})();
-
-/* Game state */
-let score=0,lives=3,gameOver=false;
+const game=document.getElementById("game");
+const panel=document.getElementById("panel");
+const boxesEl=document.getElementById("boxes");
 const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
-const overlay=document.getElementById("overlay");
+const heartsEl=document.getElementById("hearts");
+const gameover=document.getElementById("gameover");
 
-/* Letters */
-const letters=["Y","I","L","D","I","Z"];
-const active=[...letters];
-const boxWrap=document.getElementById("letterBoxes");
+let score=0, lives=3;
+let letters=["Y","I","L","D","I","Z"];
+let collected={};
+
 letters.forEach(l=>{
   const b=document.createElement("div");
   b.className="box";
-  b.dataset.l=l;
-  boxWrap.appendChild(b);
+  b.dataset.letter=l;
+  boxesEl.appendChild(b);
 });
 
-/* Helpers */
-function hit(a,b){
-  const r1=a.getBoundingClientRect();
-  const r2=b.getBoundingClientRect();
-  return !(r1.right<r2.left||r1.left>r2.right||r1.bottom<r2.top||r1.top>r2.bottom);
-}
-function updateUI(){
-  scoreEl.textContent="Skor: "+score;
-  livesEl.textContent="❤️".repeat(lives);
-}
+let dragging=false;
+panel.onmousedown=()=>dragging=true;
+window.onmouseup=()=>dragging=false;
+window.onmousemove=e=>{
+  if(dragging){
+    panel.style.left=e.clientX+"px";
+  }
+};
 
-/* Spawns */
-function spawnStar(){
-  if(gameOver) return;
-  const s=document.createElement("div");
-  s.className="star";
-  s.textContent="⭐";
-  s.style.left=Math.random()*innerWidth+"px";
-  document.body.appendChild(s);
-  let y=-60;
-  const fall=setInterval(()=>{
-    y+=3.2;
-    s.style.top=y+"px";
-    if(hit(s,panel)){
-      score+=10;updateUI();
-      s.remove();clearInterval(fall);
-    }
-    if(y>innerHeight){s.remove();clearInterval(fall);}
-  },16);
-}
-
-function spawnMeteor(){
-  if(gameOver) return;
-  const m=document.createElement("div");
-  m.className="meteor";
-  m.textContent="🪨";
-  m.style.left=Math.random()*innerWidth+"px";
-  document.body.appendChild(m);
-  let y=-80;
-  const fall=setInterval(()=>{
-    y+=4.2;
-    m.style.top=y+"px";
-    if(hit(m,panel)){
-      lives--;updateUI();
-      m.remove();clearInterval(fall);
-      if(lives<=0){
-        gameOver=true;
-        overlay.style.display="flex";
-      }
-    }
-    if(y>innerHeight){m.remove();clearInterval(fall);}
-  },16);
-}
-
-function spawnHeart(){
-  if(gameOver||lives>=3) return;
-  const h=document.createElement("div");
-  h.className="heart";
-  h.textContent="❤️";
-  h.style.left=Math.random()*innerWidth+"px";
-  document.body.appendChild(h);
-  let y=-60;
-  const fall=setInterval(()=>{
-    y+=2.4;
-    h.style.top=y+"px";
-    if(hit(h,panel)){
-      lives++;updateUI();
-      h.remove();clearInterval(fall);
-    }
-    if(y>innerHeight){h.remove();clearInterval(fall);}
-  },16);
-}
-
-function spawnLetter(){
-  if(gameOver||!active.length) return;
-  const l=active.shift();
+function dropLetter(){
+  if(letters.length===0) return;
+  const l=letters[Math.floor(Math.random()*letters.length)];
   const el=document.createElement("div");
   el.className="letter";
   el.textContent=l;
-  el.style.left=Math.random()*(innerWidth-60)+"px";
-  document.body.appendChild(el);
-  let y=-80;
-  const fall=setInterval(()=>{
-    y+=2.2;
+  el.style.left=Math.random()*90+"%";
+  el.style.top="-40px";
+  game.appendChild(el);
+  let y=0;
+  const iv=setInterval(()=>{
+    y+=2;
     el.style.top=y+"px";
-    const box=[...document.querySelectorAll(".box")].find(b=>b.dataset.l===l);
-    if(hit(el,box)){
-      box.textContent=l;
-      el.remove();clearInterval(fall);
+    const p=panel.getBoundingClientRect();
+    const r=el.getBoundingClientRect();
+    if(r.bottom>p.top && r.left<p.right && r.right>p.left){
+      document.querySelectorAll(".box").forEach(b=>{
+        if(b.dataset.letter===l && b.textContent===""){
+          b.textContent=l;
+          letters=letters.filter(x=>x!==l);
+        }
+      });
+      el.remove(); clearInterval(iv);
     }
-    if(y>innerHeight){el.remove();clearInterval(fall);}
+    if(y>window.innerHeight){ el.remove(); clearInterval(iv);}
   },16);
 }
 
-/* Timers */
-setInterval(spawnStar,550);
-setInterval(spawnMeteor,1100);
-setInterval(spawnHeart,9000);
-setInterval(spawnLetter,3600);
-</script>
+function dropMeteor(){
+  const m=document.createElement("div");
+  m.className="meteor";
+  m.style.left=Math.random()*90+"%";
+  m.style.top="-60px";
+  game.appendChild(m);
+  let y=0;
+  const iv=setInterval(()=>{
+    y+=4;
+    m.style.top=y+"px";
+    const p=panel.getBoundingClientRect();
+    const r=m.getBoundingClientRect();
+    if(r.bottom>p.top && r.left<p.right && r.right>p.left){
+      lives--;
+      heartsEl.textContent="❤️".repeat(lives);
+      m.remove(); clearInterval(iv);
+      if(lives<=0) gameover.style.display="flex";
+    }
+    if(y>window.innerHeight){ m.remove(); clearInterval(iv);}
+  },16);
+}
 
+setInterval(dropLetter,2500);
+setInterval(dropMeteor,1800);
+</script>
 </body>
 </html>
