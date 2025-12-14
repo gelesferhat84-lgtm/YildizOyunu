@@ -2,187 +2,122 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>YILDIZ – Uzay Tehdit</title>
+<title>YILDIZ – Final Test</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  overflow:hidden;
-  background:#000;
-}
-canvas{display:block;}
+html,body{margin:0;overflow:hidden;background:#000}
+canvas{display:block}
 #ui{
-  position:fixed;
-  top:10px;
-  width:100%;
-  text-align:center;
-  color:white;
-  font-family:Arial, sans-serif;
-  font-size:22px;
-  z-index:10;
+ position:fixed;top:10px;width:100%;
+ text-align:center;color:white;
+ font:22px Arial;z-index:10
+}
+#restart{
+ display:none;
+ position:fixed;
+ top:55%;
+ left:50%;
+ transform:translate(-50%,-50%);
+ padding:12px 24px;
+ font-size:20px;
+ border:none;
+ border-radius:30px;
+ background:#ffcc00;
+ cursor:pointer;
+ z-index:20
 }
 </style>
 </head>
 <body>
 
 <div id="ui">⭐ 0</div>
+<button id="restart" onclick="location.reload()">🔁 Tekrar Oyna</button>
 <canvas id="game"></canvas>
 
 <script>
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-resize();
-addEventListener("resize",resize);
-function resize(){
-  canvas.width=innerWidth;
-  canvas.height=innerHeight;
-}
+const c=document.getElementById("game"),ctx=c.getContext("2d");
+c.width=innerWidth;c.height=innerHeight;
 
-/* 🌌 Arka plan yıldızları */
-const bg=[];
-for(let i=0;i<220;i++){
-  bg.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.4,a:Math.random()*6});
-}
+const player={x:c.width/2,y:c.height-90,r:34};
+const stars=[],meteors=[],aliens=[],bullets=[];
+let score=0,gameOver=false;
 
-/* 🌙 Oyuncu */
-const player={x:canvas.width/2,y:canvas.height-90,r:34};
-
-/* Oyun nesneleri */
-const stars=[];
-const meteors=[];
-const aliens=[];
-const bullets=[];
-
-let score=0;
-let gameOver=false;
-
-/* Kontrol */
+/* kontrol */
 addEventListener("mousemove",e=>player.x=e.clientX);
 addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
 
-/* ⭐ Yıldız */
-setInterval(()=>{
- if(!gameOver)
- stars.push({x:Math.random()*canvas.width,y:-20,r:10,v:1.6});
-},700);
+/* yıldız */
+setInterval(()=>!gameOver&&stars.push({x:Math.random()*c.width,y:-20,r:10,v:1.5}),700);
+/* meteor */
+setInterval(()=>!gameOver&&meteors.push({x:Math.random()*c.width,y:-40,r:18,v:5+Math.random()*3}),1300);
+/* ufo */
+setInterval(()=>!gameOver&&aliens.push({x:Math.random()*c.width,y:-60,state:0,t:0}),4200);
 
-/* ☄️ Meteor */
-setInterval(()=>{
- if(!gameOver)
- meteors.push({x:Math.random()*canvas.width,y:-40,r:16,v:5+Math.random()*3});
-},1400);
-
-/* 👾 Uzaylı */
-setInterval(()=>{
- if(!gameOver)
- aliens.push({
-   x:Math.random()*canvas.width,
-   y:-60,
-   w:60,h:26,
-   vy:2,
-   state:"in", // in → stop → out
-   timer:0
- });
-},4500);
-
-/* 🔄 Oyun döngüsü */
 function loop(){
- ctx.clearRect(0,0,canvas.width,canvas.height);
+ ctx.clearRect(0,0,c.width,c.height);
+ ctx.fillStyle="#020718";ctx.fillRect(0,0,c.width,c.height);
 
- /* Arka plan */
- let g=ctx.createLinearGradient(0,0,0,canvas.height);
- g.addColorStop(0,"#050a20");
- g.addColorStop(1,"#000");
- ctx.fillStyle=g;
- ctx.fillRect(0,0,canvas.width,canvas.height);
-
- bg.forEach(s=>{
-  s.a+=0.02;
-  ctx.fillStyle=`rgba(255,255,255,${0.4+Math.sin(s.a)*0.6})`;
-  ctx.beginPath();
-  ctx.arc(s.x,s.y,s.r,0,6.28);
-  ctx.fill();
- });
-
- /* ⭐ Yıldızlar */
- for(let i=stars.length-1;i>=0;i--){
-  let s=stars[i];
+ /* ⭐ */
+ stars.forEach((s,i)=>{
   s.y+=s.v;
   ctx.fillStyle="#fff6c8";
-  ctx.beginPath();
-  ctx.arc(s.x,s.y,s.r,0,6.28);
-  ctx.fill();
-
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fill();
   if(Math.hypot(s.x-player.x,s.y-player.y)<s.r+player.r){
-    stars.splice(i,1);
-    score++;
-    ui.innerText="⭐ "+score;
+   stars.splice(i,1);score++;ui.innerText="⭐ "+score;
   }
- }
-
- /* ☄️ Meteor */
- for(let i=meteors.length-1;i>=0;i--){
-  let m=meteors[i];
-  m.y+=m.v;
-  ctx.fillStyle="#888";
-  ctx.beginPath();
-  ctx.arc(m.x,m.y,m.r,0,6.28);
-  ctx.fill();
-  if(Math.hypot(m.x-player.x,m.y-player.y)<m.r+player.r){
-    gameOver=true;
-  }
- }
-
- /* 👾 Uzaylı */
- aliens.forEach(a=>{
-  if(a.state==="in"){
-    a.y+=a.vy;
-    if(a.y>120){ a.state="stop"; a.timer=0; }
-  }else if(a.state==="stop"){
-    a.timer++;
-    if(a.timer%50===0){
-      bullets.push({x:a.x+a.w/2,y:a.y+a.h,v:5});
-    }
-    if(a.timer>180){ a.state="out"; }
-  }else{
-    a.y-=2;
-  }
-
-  ctx.fillStyle="#9ff";
-  ctx.fillRect(a.x,a.y,a.w,a.h);
  });
 
- /* 🔫 Ateşler */
- for(let i=bullets.length-1;i>=0;i--){
-  let b=bullets[i];
-  b.y+=b.v;
+ /* ☄️ METEOR – ATEŞLİ */
+ meteors.forEach((m,i)=>{
+  m.y+=m.v;
+  let g=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,30);
+  g.addColorStop(0,"#fff");
+  g.addColorStop(0.4,"orange");
+  g.addColorStop(1,"red");
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,6.28);ctx.fill();
+  if(Math.hypot(m.x-player.x,m.y-player.y)<m.r+player.r) end();
+ });
+
+ /* 👾 UFO */
+ aliens.forEach(a=>{
+  if(a.state===0){a.y+=2;if(a.y>120)a.state=1}
+  else if(a.state===1){
+   a.t++; if(a.t%50===0) bullets.push({x:a.x,y:a.y+18});
+   if(a.t>180)a.state=2;
+  }else a.y-=2;
+
+  // gövde
+  ctx.fillStyle="#aaa";
+  ctx.beginPath();ctx.ellipse(a.x,a.y,35,12,0,0,6.28);ctx.fill();
+  // cam
+  ctx.fillStyle="rgba(120,200,255,.6)";
+  ctx.beginPath();ctx.arc(a.x,a.y-8,10,0,6.28);ctx.fill();
+ });
+
+ /* 🔫 ateş */
+ bullets.forEach((b,i)=>{
+  b.y+=5;
   ctx.strokeStyle="red";
-  ctx.beginPath();
-  ctx.moveTo(b.x,b.y);
-  ctx.lineTo(b.x,b.y+12);
-  ctx.stroke();
+  ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x,b.y+12);ctx.stroke();
+  if(Math.hypot(b.x-player.x,b.y-player.y)<player.r) end();
+ });
 
-  if(Math.hypot(b.x-player.x,b.y-player.y)<player.r){
-    gameOver=true;
-  }
- }
+ /* oyuncu */
+ ctx.strokeStyle="#bdf";ctx.lineWidth=4;
+ ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,6.28);ctx.stroke();
 
- /* Oyuncu */
- ctx.strokeStyle="#bdf";
- ctx.lineWidth=4;
- ctx.beginPath();
- ctx.arc(player.x,player.y,player.r,0,6.28);
- ctx.stroke();
-
- if(!gameOver){
-  requestAnimationFrame(loop);
- }else{
-  ctx.fillStyle="white";
-  ctx.font="28px Arial";
-  ctx.fillText("Oyun Bitti",canvas.width/2-70,canvas.height/2);
- }
+ if(!gameOver) requestAnimationFrame(loop);
 }
+
+function end(){
+ gameOver=true;
+ restart.style.display="block";
+ ctx.fillStyle="white";
+ ctx.font="28px Arial";
+ ctx.fillText("Oyun Bitti",c.width/2-70,c.height/2);
+}
+
 loop();
 </script>
 </body>
