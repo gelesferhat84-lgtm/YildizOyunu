@@ -36,7 +36,7 @@ canvas{display:block}
 }
 #letters .on{
   color:#fff;
-  text-shadow:0 0 8px #ffb6c1;
+  text-shadow:0 0 10px #ffb6c1;
 }
 
 /* SKOR */
@@ -117,35 +117,65 @@ function drawBackground(){
 }
 
 /* 🎮 OYUNCU */
-const player={x:canvas.width/2,y:canvas.height-80,r:28};
+const player={x:canvas.width/2,y:canvas.height-120,r:26};
 addEventListener("mousemove",e=>player.x=e.clientX);
 addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
 
-/* ⭐ YILDIZLAR */
+/* 🧺 ALT KUYULAR */
+const bins=[];
+const letters=["Y","I","L","D","I","Z"];
+function setupBins(){
+  bins.length=0;
+  const w=canvas.width/6;
+  for(let i=0;i<6;i++){
+    bins.push({
+      x:i*w + w/2,
+      y:canvas.height-40,
+      w:w-10,
+      h:50,
+      l:letters[i]
+    });
+  }
+}
+setupBins(); addEventListener("resize",setupBins);
+
+/* ⭐ NORMAL YILDIZLAR */
 let stars=[], score=0;
 setInterval(()=>{
-  stars.push({x:Math.random()*canvas.width,y:-20,r:12});
-},700);
+  stars.push({x:Math.random()*canvas.width,y:-20,r:10});
+},900);
+
+/* ✨ HARF ORBLARI (YILDIZ GİBİ AMA HARF) */
+let letterOrbs=[];
+setInterval(()=>{
+  const idx=Math.floor(Math.random()*6);
+  letterOrbs.push({
+    x:Math.random()*canvas.width,
+    y:-20,
+    r:14,
+    l:letters[idx]
+  });
+},2200);
 
 /* 🔤 GÖREV */
 const mission=[false,false,false,false,false,false];
-function checkMission(){
-  const i=Math.floor(score/3)-1;
-  if(i>=0 && i<6 && !mission[i]){
+function activateLetter(l){
+  const i=letters.indexOf(l);
+  if(i>-1 && !mission[i]){
     mission[i]=true;
     document.getElementById("l"+i).classList.add("on");
   }
 }
 
-/* 🔁 DÖNGÜ */
+/* 🔁 ANA DÖNGÜ */
 function loop(){
   drawBackground();
 
-  // oyuncu
+  /* oyuncu */
   ctx.fillStyle="#ffd1dc";
   ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2); ctx.fill();
 
-  // yıldızlar
+  /* normal yıldızlar */
   ctx.fillStyle="#fff";
   stars.forEach((s,i)=>{
     ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
@@ -154,9 +184,55 @@ function loop(){
       stars.splice(i,1);
       score++;
       document.getElementById("score").innerText="⭐ "+score;
-      checkMission();
     }
     if(s.y>canvas.height) stars.splice(i,1);
+  });
+
+  /* harf orbları */
+  letterOrbs.forEach((o,i)=>{
+    // parıltı
+    const glow=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r*2);
+    glow.addColorStop(0,"rgba(255,200,220,0.8)");
+    glow.addColorStop(1,"rgba(255,200,220,0)");
+    ctx.fillStyle=glow;
+    ctx.beginPath(); ctx.arc(o.x,o.y,o.r*2,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle="#fff";
+    ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill();
+
+    ctx.fillStyle="#c06";
+    ctx.font="bold 16px Arial";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.fillText(o.l,o.x,o.y);
+
+    o.y+=3;
+
+    bins.forEach(b=>{
+      if(o.y>canvas.height-70 &&
+         Math.abs(o.x-b.x)<b.w/2 &&
+         o.l===b.l){
+        activateLetter(o.l);
+        letterOrbs.splice(i,1);
+      }
+    });
+
+    if(o.y>canvas.height) letterOrbs.splice(i,1);
+  });
+
+  /* kuyular */
+  bins.forEach(b=>{
+    ctx.fillStyle="rgba(255,180,200,0.25)";
+    ctx.strokeStyle="rgba(255,150,180,0.8)";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.roundRect(b.x-b.w/2,b.y,b.w,b.h,12);
+    ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle="#fff";
+    ctx.font="16px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(b.l,b.x,b.y+30);
   });
 
   requestAnimationFrame(loop);
