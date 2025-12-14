@@ -20,12 +20,9 @@ body::before{
     radial-gradient(1px 1px at 40% 80%,#fff,transparent);
   opacity:.18;pointer-events:none;
 }
-
-/* HUD */
 #hud{position:fixed;top:14px;left:14px;color:white;font-size:18px;z-index:20}
 #lives{margin-left:6px}
 
-/* PANEL */
 #panel{
   position:fixed;bottom:80px;left:50%;
   transform:translateX(-50%);
@@ -35,7 +32,6 @@ body::before{
   z-index:15;
 }
 
-/* HARF KUTULARI */
 #letterBoxes{
   position:fixed;bottom:20px;left:10px;
   display:flex;gap:6px;z-index:16;
@@ -50,7 +46,6 @@ body::before{
   display:flex;align-items:center;justify-content:center;
 }
 
-/* DÜŞENLER */
 .item{position:absolute;top:-80px;pointer-events:none}
 .star{
   width:18px;height:18px;
@@ -88,7 +83,6 @@ body::before{
   color:#ffe066;text-shadow:0 0 14px gold;
 }
 
-/* KAZANMA PATLAMASI */
 .explosion{
   position:fixed;width:120px;height:120px;
   background:radial-gradient(circle,rgba(255,220,120,.9),transparent 70%);
@@ -100,7 +94,6 @@ body::before{
   to{transform:scale(1.6);opacity:0}
 }
 
-/* GAME OVER / WIN */
 #over{
   display:none;position:fixed;inset:0;
   background:rgba(0,0,0,.75);
@@ -132,10 +125,12 @@ body::before{
 </div>
 
 <script>
-let score=0,lives=3,running=true;
+let score=0,lives=3,running=true,difficulty=1;
+
 const letters=["Y","I","L","D","I","Z"];
-const filled=new Set(),active=new Set(),items=[];
-let difficulty=1;
+const requiredCount={Y:1,I:2,L:1,D:1,Z:1};
+const collectedCount={Y:0,I:0,L:0,D:0,Z:0};
+const active=new Set(),items=[];
 
 const panel=document.getElementById("panel");
 const scoreEl=document.getElementById("score");
@@ -144,14 +139,12 @@ const over=document.getElementById("over");
 const endText=document.getElementById("endText");
 const boxes=document.getElementById("letterBoxes");
 
-/* Kutular */
 letters.forEach(l=>{
   const b=document.createElement("div");
   b.className="box";b.dataset.letter=l;
   boxes.appendChild(b);
 });
 
-/* Panel sürükleme */
 let dragging=false;
 panel.addEventListener("touchstart",()=>dragging=true);
 window.addEventListener("touchend",()=>dragging=false);
@@ -162,17 +155,15 @@ window.addEventListener("touchmove",e=>{
   panel.style.left=x+"px";
 });
 
-/* Yardımcı */
 function collide(a,b){
   return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
 }
 function updateLives(){livesEl.textContent="❤️".repeat(lives)}
 
-/* Spawn */
 function spawn(type){
   if(!running) return;
   if(type==="letter"){
-    const pool=letters.filter(l=>!filled.has(l)&&!active.has(l));
+    const pool=letters.filter(l=>collectedCount[l]<requiredCount[l] && !active.has(l));
     if(!pool.length) return;
     const l=pool[Math.floor(Math.random()*pool.length)];
     active.add(l);
@@ -193,7 +184,6 @@ function spawn(type){
   items.push({el,type});
 }
 
-/* KAZANMA PATLAMASI */
 function winExplosion(){
   ["top","bottom","left","right"].forEach(side=>{
     const e=document.createElement("div");
@@ -207,7 +197,6 @@ function winExplosion(){
   });
 }
 
-/* Loop */
 function loop(){
   if(!running) return;
   const pRect=panel.getBoundingClientRect();
@@ -222,10 +211,14 @@ function loop(){
       if(o.type==="heart"&&lives<3) lives++;
       if(o.type==="meteor") lives--;
       if(o.type==="letter"){
-        filled.add(o.el.letter);
+        collectedCount[o.el.letter]++;
         active.delete(o.el.letter);
         document.querySelector(`[data-letter="${o.el.letter}"]`).textContent=o.el.letter;
-        if(filled.size===letters.length){
+
+        const done=Object.keys(requiredCount).every(
+          l=>collectedCount[l]>=requiredCount[l]
+        );
+        if(done){
           running=false;
           winExplosion();
           setTimeout(()=>{
@@ -251,7 +244,6 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* Zamanlayıcılar */
 setInterval(()=>spawn("star"),900);
 setInterval(()=>spawn("meteor"),1200);
 setInterval(()=>spawn("heart"),5200);
