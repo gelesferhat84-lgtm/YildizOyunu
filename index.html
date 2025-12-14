@@ -2,253 +2,145 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>⭐ Yıldız Oyunu ⭐</title>
+<title>YILDIZ – Gerçekçi Oyun</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 html,body{
   margin:0;
   padding:0;
   overflow:hidden;
-  font-family:Arial, sans-serif;
+  background:#000;
 }
-
-/* 🌌 GECE GÖKYÜZÜ */
-body{
-  background: radial-gradient(circle at bottom, #0a102a, #00010a);
-  color:white;
+canvas{
+  display:block;
 }
-
-/* ✨ ARKA PLAN YILDIZLAR */
-.star-bg{
-  position:fixed;
-  width:2px;
-  height:2px;
-  background:white;
-  opacity:.8;
-  border-radius:50%;
-  animation: twinkle 3s infinite alternate;
-}
-
-@keyframes twinkle{
-  from{opacity:.3}
-  to{opacity:1}
-}
-
-/* ❤️ SKOR */
-#score{
+#ui{
   position:fixed;
   top:10px;
   width:100%;
   text-align:center;
-  font-size:32px;
+  color:white;
+  font-family:Arial, sans-serif;
+  font-size:24px;
   z-index:10;
-}
-
-/* ⭐ ORTA YAZI */
-#name{
-  position:fixed;
-  top:70px;
-  width:100%;
-  text-align:center;
-  font-size:36px;
-  letter-spacing:10px;
-  z-index:10;
-}
-
-/* 📦 HARF KUTULARI */
-#boxes{
-  position:fixed;
-  bottom:20px;
-  left:10px;
-  display:flex;
-  gap:6px;
-  z-index:10;
-}
-.box{
-  width:45px;
-  height:45px;
-  border:2px solid white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:26px;
-  background:rgba(255,255,255,0.1);
-}
-
-/* 🗑️ SEPET */
-#basket{
-  position:fixed;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:48px;
-  z-index:10;
-}
-
-/* ⭐ NESNELER */
-.fall{
-  position:fixed;
-  top:-50px;
-  font-size:36px;
-}
-
-/* 🎉 FİNAL */
-#final{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.8);
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  z-index:20;
-}
-#final h1{
-  font-size:36px;
-  text-align:center;
-}
-button{
-  padding:10px 20px;
-  font-size:20px;
-  margin-top:20px;
 }
 </style>
 </head>
-
 <body>
 
-<div id="score">❤️ 0</div>
-<div id="name">⭐ _ _ _ _ _ _ ⭐</div>
-
-<div id="boxes">
-  <div class="box" data-l="Y"></div>
-  <div class="box" data-l="I"></div>
-  <div class="box" data-l="L"></div>
-  <div class="box" data-l="D"></div>
-  <div class="box" data-l="I2"></div>
-  <div class="box" data-l="Z"></div>
-</div>
-
-<div id="basket">🗑️</div>
-
-<div id="final">
-  <h1>⭐ Yıldız seni çok seviyorum ⭐</h1>
-  <button onclick="location.reload()">Tekrar Oyna</button>
-</div>
+<div id="ui">❤️ 0</div>
+<canvas id="game"></canvas>
 
 <script>
-/* 🌌 ARKA PLAN YILDIZ OLUŞTUR */
-for(let i=0;i<120;i++){
-  let s=document.createElement("div");
-  s.className="star-bg";
-  s.style.left=Math.random()*100+"%";
-  s.style.top=Math.random()*100+"%";
-  s.style.animationDuration=(2+Math.random()*4)+"s";
-  document.body.appendChild(s);
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+resize();
+window.addEventListener("resize", resize);
+
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
 }
 
-let basket=document.getElementById("basket");
-let score=0;
-let letters=["Y","I","L","D","I","Z"];
-let doneLetters=[];
-
-/* 🗑️ KAYDIRMA */
-document.addEventListener("touchmove",e=>{
-  basket.style.left=e.touches[0].clientX+"px";
-});
-document.addEventListener("mousemove",e=>{
-  basket.style.left=e.clientX+"px";
-});
-
-/* ⭐ DÜŞEN NESNE */
-function drop(){
-  let d=document.createElement("div");
-  d.className="fall";
-  let type=Math.random();
-
-  if(type<0.6){
-    let l=letters[Math.floor(Math.random()*letters.length)];
-    if(doneLetters.includes(l)) return;
-    d.textContent="⭐"+l;
-    d.dataset.letter=l;
-  }else if(type<0.75){
-    d.textContent="💣";
-    d.dataset.bomb=1;
-  }else if(type<0.9){
-    d.textContent="💔";
-    d.dataset.break=1;
-  }else{
-    d.textContent="🚀";
-    d.dataset.rocket=1;
-  }
-
-  d.style.left=Math.random()*90+"%";
-  document.body.appendChild(d);
-
-  let y=0;
-  let fall=setInterval(()=>{
-    y+=3;
-    d.style.top=y+"px";
-
-    let b=basket.getBoundingClientRect();
-    let r=d.getBoundingClientRect();
-
-    if(r.bottom>b.top && r.left<b.right && r.right>b.left){
-      clearInterval(fall);
-      d.remove();
-
-      if(d.dataset.letter){
-        doneLetters.push(d.dataset.letter);
-        score+=10;
-        fillBox(d.dataset.letter);
-      }
-      if(d.dataset.bomb) score-=5;
-      if(d.dataset.break) score-=10;
-      if(d.dataset.rocket) endGame();
-      update();
-    }
-
-    if(y>window.innerHeight){
-      clearInterval(fall);
-      d.remove();
-    }
-  },20);
-}
-
-function fillBox(l){
-  let box=document.querySelector(`.box[data-l="${l}"]`);
-  if(box && box.textContent===""){
-    box.textContent=l;
-    updateName();
-    checkWin();
-  }
-}
-
-function updateName(){
-  let text="⭐ ";
-  ["Y","I","L","D","I","Z"].forEach(l=>{
-    text+=doneLetters.includes(l)?l+" ":"_ ";
+/* 🌌 GECE GÖKYÜZÜ */
+const stars = [];
+for(let i=0;i<200;i++){
+  stars.push({
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    r:Math.random()*1.5,
+    a:Math.random(),
+    s:Math.random()*0.02
   });
-  text+="⭐";
-  document.getElementById("name").textContent=text;
 }
 
-function update(){
-  document.getElementById("score").textContent="❤️ "+score;
-}
+/* 🌙 TOPLAYICI (IŞIKLI HALKA) */
+const player = {
+  x: canvas.width/2,
+  y: canvas.height-80,
+  r: 35
+};
 
-function checkWin(){
-  if(doneLetters.length>=6){
-    document.getElementById("final").style.display="flex";
+/* ⭐ DÜŞEN YILDIZ */
+const falling = [];
+let score = 0;
+
+/* 🎮 KONTROL */
+document.addEventListener("mousemove",e=>{
+  player.x = e.clientX;
+});
+document.addEventListener("touchmove",e=>{
+  player.x = e.touches[0].clientX;
+});
+
+/* ⭐ YILDIZ OLUŞTUR */
+setInterval(()=>{
+  falling.push({
+    x: Math.random()*canvas.width,
+    y: -20,
+    r: 10 + Math.random()*6,
+    v: 1.5 + Math.random()*1.5
+  });
+},700);
+
+/* 🔄 OYUN DÖNGÜSÜ */
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  /* ARKA PLAN */
+  let g = ctx.createRadialGradient(
+    canvas.width/2, canvas.height,
+    50,
+    canvas.width/2, canvas.height,
+    canvas.height
+  );
+  g.addColorStop(0,"#0a1233");
+  g.addColorStop(1,"#000");
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  /* YILDIZLAR */
+  stars.forEach(s=>{
+    s.a += s.s;
+    ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(s.a)*0.7})`;
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fill();
+  });
+
+  /* DÜŞEN YILDIZLAR */
+  for(let i=falling.length-1;i>=0;i--){
+    const f = falling[i];
+    f.y += f.v;
+
+    ctx.fillStyle="rgba(255,255,200,0.9)";
+    ctx.beginPath();
+    ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+    ctx.fill();
+
+    /* ÇARPIŞMA */
+    const dx = f.x - player.x;
+    const dy = f.y - player.y;
+    if(Math.hypot(dx,dy) < f.r + player.r){
+      falling.splice(i,1);
+      score+=5;
+      document.getElementById("ui").innerText="❤️ "+score;
+    } else if(f.y > canvas.height+50){
+      falling.splice(i,1);
+    }
   }
+
+  /* IŞIKLI HALKA */
+  ctx.strokeStyle="rgba(180,220,255,0.9)";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.arc(player.x,player.y,player.r,0,Math.PI*2);
+  ctx.stroke();
+
+  requestAnimationFrame(loop);
 }
 
-function endGame(){
-  document.getElementById("final").style.display="flex";
-}
-
-setInterval(drop,800);
+loop();
 </script>
 
 </body>
