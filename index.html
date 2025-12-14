@@ -17,76 +17,92 @@ body{
 
 /* UI */
 #score{
-  position:absolute;top:10px;left:10px;
-  color:white;font-size:16px;
-  text-shadow:0 0 10px gold;
+  position:absolute;top:12px;left:12px;
+  color:white;font-size:18px;
+  text-shadow:0 0 12px gold;
 }
 #lives{
-  position:absolute;top:30px;left:10px;
-  color:pink;font-size:16px;
+  position:absolute;top:38px;left:12px;
+  color:pink;font-size:20px;
 }
 
 /* Glass Panel */
 #glassPanel{
   position:absolute;
-  bottom:110px;
+  bottom:120px;
   left:50%;
   transform:translateX(-50%);
-  width:50%;
-  height:100px;
-  border-radius:30px;
-  background:linear-gradient(135deg,
+  width:42%;
+  height:80px;
+  border-radius:26px;
+  background:linear-gradient(
+    135deg,
     rgba(255,150,220,.35),
-    rgba(255,150,220,.1));
+    rgba(255,150,220,.1)
+  );
   backdrop-filter:blur(20px);
   border:1px solid rgba(255,180,230,.6);
   box-shadow:
-    inset 0 0 30px rgba(255,180,230,.4),
-    0 0 40px rgba(255,100,200,.4);
+    inset 0 0 26px rgba(255,180,230,.4),
+    0 0 36px rgba(255,100,200,.4);
 }
 
 /* Letter boxes */
 #letterBoxes{
   position:absolute;
-  bottom:20px;
+  bottom:26px;
   left:50%;
   transform:translateX(-50%);
   display:flex;gap:14px;
 }
 .box{
-  width:60px;height:60px;
+  width:58px;height:58px;
   border-radius:16px;
   background:rgba(255,150,220,.18);
   backdrop-filter:blur(10px);
   border:1px solid rgba(255,180,230,.5);
-  display:flex;align-items:center;justify-content:center;
-  font-size:28px;color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  color:white;
+  text-shadow:0 0 12px gold;
 }
 
 /* Objects */
-.star, .meteor, .heart, .letter{
-  position:absolute;top:-80px;
+.star,.meteor,.heart,.letter{
+  position:absolute;top:-100px;
 }
 .star{
-  font-size:40px;
-  text-shadow:0 0 20px gold,0 0 40px gold;
+  font-size:48px;
+  text-shadow:
+    0 0 20px gold,
+    0 0 40px gold;
 }
 .letter{
   font-size:46px;
   text-shadow:0 0 20px gold;
 }
 .meteor{
-  font-size:48px;
-  filter:drop-shadow(0 0 20px orange);
+  font-size:54px;
+}
+.meteor::before{
+  content:"🔥";
+  position:absolute;
+  top:-26px;
+  left:10px;
+  font-size:28px;
+  filter:blur(1px);
 }
 .heart{
-  font-size:34px;
+  font-size:36px;
 }
 
 /* Game over */
 #overlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.65);
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
   display:none;
   align-items:center;
   justify-content:center;
@@ -95,8 +111,9 @@ body{
 }
 #overlay button{
   margin-top:20px;
-  padding:10px 20px;
+  padding:12px 24px;
   font-size:16px;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -115,34 +132,35 @@ body{
 </div>
 
 <script>
-/* ===== Panel movement ===== */
+/* Panel movement */
 const panel=document.getElementById("glassPanel");
 let tx=innerWidth/2,cx=tx;
 document.addEventListener("mousemove",e=>tx=e.clientX);
 document.addEventListener("touchmove",e=>tx=e.touches[0].clientX);
 (function move(){
-  cx+=(tx-cx)*.25;
+  cx+=(tx-cx)*.35;
   panel.style.left=cx+"px";
   requestAnimationFrame(move);
 })();
 
-/* ===== Game state ===== */
+/* Game state */
 let score=0,lives=3,gameOver=false;
 const scoreEl=document.getElementById("score");
 const livesEl=document.getElementById("lives");
 const overlay=document.getElementById("overlay");
 
-/* ===== Letters ===== */
+/* Letters */
 const letters=["Y","I","L","D","I","Z"];
 const active=[...letters];
 const boxWrap=document.getElementById("letterBoxes");
 letters.forEach(l=>{
   const b=document.createElement("div");
-  b.className="box";b.dataset.l=l;
+  b.className="box";
+  b.dataset.l=l;
   boxWrap.appendChild(b);
 });
 
-/* ===== Helpers ===== */
+/* Helpers */
 function hit(a,b){
   const r1=a.getBoundingClientRect();
   const r2=b.getBoundingClientRect();
@@ -153,16 +171,18 @@ function updateUI(){
   livesEl.textContent="❤️".repeat(lives);
 }
 
-/* ===== Spawn functions ===== */
+/* Spawns */
 function spawnStar(){
   if(gameOver) return;
   const s=document.createElement("div");
-  s.className="star";s.textContent="⭐";
+  s.className="star";
+  s.textContent="⭐";
   s.style.left=Math.random()*innerWidth+"px";
   document.body.appendChild(s);
   let y=-60;
   const fall=setInterval(()=>{
-    y+=3;s.style.top=y+"px";
+    y+=3.2;
+    s.style.top=y+"px";
     if(hit(s,panel)){
       score+=10;updateUI();
       s.remove();clearInterval(fall);
@@ -174,12 +194,14 @@ function spawnStar(){
 function spawnMeteor(){
   if(gameOver) return;
   const m=document.createElement("div");
-  m.className="meteor";m.textContent="☄️";
+  m.className="meteor";
+  m.textContent="🪨";
   m.style.left=Math.random()*innerWidth+"px";
   document.body.appendChild(m);
   let y=-80;
   const fall=setInterval(()=>{
-    y+=4;m.style.top=y+"px";
+    y+=4.2;
+    m.style.top=y+"px";
     if(hit(m,panel)){
       lives--;updateUI();
       m.remove();clearInterval(fall);
@@ -195,12 +217,14 @@ function spawnMeteor(){
 function spawnHeart(){
   if(gameOver||lives>=3) return;
   const h=document.createElement("div");
-  h.className="heart";h.textContent="❤️";
+  h.className="heart";
+  h.textContent="❤️";
   h.style.left=Math.random()*innerWidth+"px";
   document.body.appendChild(h);
   let y=-60;
   const fall=setInterval(()=>{
-    y+=2;h.style.top=y+"px";
+    y+=2.4;
+    h.style.top=y+"px";
     if(hit(h,panel)){
       lives++;updateUI();
       h.remove();clearInterval(fall);
@@ -213,14 +237,15 @@ function spawnLetter(){
   if(gameOver||!active.length) return;
   const l=active.shift();
   const el=document.createElement("div");
-  el.className="letter";el.textContent=l;
+  el.className="letter";
+  el.textContent=l;
   el.style.left=Math.random()*(innerWidth-60)+"px";
   document.body.appendChild(el);
   let y=-80;
   const fall=setInterval(()=>{
-    y+=2;el.style.top=y+"px";
-    const box=[...document.querySelectorAll(".box")]
-      .find(b=>b.dataset.l===l);
+    y+=2.2;
+    el.style.top=y+"px";
+    const box=[...document.querySelectorAll(".box")].find(b=>b.dataset.l===l);
     if(hit(el,box)){
       box.textContent=l;
       el.remove();clearInterval(fall);
@@ -229,12 +254,12 @@ function spawnLetter(){
   },16);
 }
 
-/* ===== Timers ===== */
-setInterval(spawnStar,600);
-setInterval(spawnMeteor,1200);
-setInterval(spawnHeart,8000);
-setInterval(spawnLetter,3500);
-
+/* Timers */
+setInterval(spawnStar,550);
+setInterval(spawnMeteor,1100);
+setInterval(spawnHeart,9000);
+setInterval(spawnLetter,3600);
 </script>
+
 </body>
 </html>
