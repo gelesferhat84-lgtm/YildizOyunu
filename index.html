@@ -11,7 +11,8 @@ html,body{
   padding:0;
   overflow:hidden;
   font-family:Arial,Helvetica,sans-serif;
-  background:radial-gradient(circle at top,#5b1c7a,#1b0026);
+  background:
+    radial-gradient(circle at top,#0b1d33,#020611);
 }
 
 /* HUD */
@@ -19,12 +20,12 @@ html,body{
   position:fixed;
   top:10px;
   left:10px;
-  color:white;
+  color:#fff;
   font-size:18px;
   z-index:10;
 }
 
-/* PANEL – %50 KÜÇÜK */
+/* PANEL */
 #panel{
   position:fixed;
   bottom:20px;
@@ -36,6 +37,30 @@ html,body{
   background:linear-gradient(90deg,#ff5fa2,#ff2d7a);
   box-shadow:0 0 25px rgba(255,80,200,.9);
   touch-action:none;
+}
+
+/* YILDIZ KUTULAR */
+#letterBoxes{
+  position:fixed;
+  bottom:20px;
+  left:10px;
+  display:flex;
+  gap:6px;
+  z-index:10;
+}
+.box{
+  width:32px;
+  height:32px;
+  border:2px solid rgba(255,255,255,.6);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:16px;
+}
+.box.filled{
+  background:rgba(255,255,255,.15);
 }
 
 /* NESNE */
@@ -63,7 +88,6 @@ html,body{
   background:#ff4d6d;
   transform:rotate(-45deg);
   border-radius:50% 50% 0 0;
-  box-shadow:0 0 12px #ff4d6d;
 }
 .heart::before,.heart::after{
   content:"";
@@ -89,7 +113,13 @@ html,body{
   transform:translateX(-50%);
   width:6px;height:45px;
   background:linear-gradient(to top,rgba(255,140,0,.8),transparent);
-  filter:blur(1px);
+}
+
+/* HARF */
+.letter{
+  color:#fff;
+  font-size:20px;
+  font-weight:bold;
 }
 
 /* GAME OVER */
@@ -122,6 +152,7 @@ html,body{
   Skor: <span id="score">0</span> <span id="lives">❤️❤️❤️</span>
 </div>
 
+<div id="letterBoxes"></div>
 <div id="panel"></div>
 
 <div id="over">
@@ -131,16 +162,24 @@ html,body{
 
 <script>
 let score=0, lives=3, running=true;
+const letters=["Y","I","L","D","I","Z"];
+const filledLetters=new Set();
+const activeLetters=new Set();
+const items=[];
+
 const scoreEl=document.getElementById("score");
 const livesEl=document.getElementById("lives");
 const panel=document.getElementById("panel");
 const over=document.getElementById("over");
-const items=[];
+const boxes=document.getElementById("letterBoxes");
 
-/* CAN */
-function updateLives(){
-  livesEl.textContent="❤️".repeat(lives);
-}
+/* KUTULAR */
+letters.forEach(l=>{
+  const b=document.createElement("div");
+  b.className="box";
+  b.dataset.letter=l;
+  boxes.appendChild(b);
+});
 
 /* PANEL */
 let drag=false;
@@ -153,40 +192,62 @@ addEventListener("pointermove",e=>{
   panel.style.left=x+"px";
 });
 
-/* SPAWN */
+function updateLives(){
+  livesEl.textContent="❤️".repeat(lives);
+}
+
 function spawn(type){
+  if(type==="letter"){
+    const pool=letters.filter(l=>!filledLetters.has(l)&&!activeLetters.has(l));
+    if(!pool.length) return;
+    const letter=pool[Math.floor(Math.random()*pool.length)];
+    activeLetters.add(letter);
+    const el=document.createElement("div");
+    el.className="item letter";
+    el.textContent=letter;
+    el.letter=letter;
+    el.y=-40;
+    el.x=Math.random()*(innerWidth-40);
+    el.style.left=el.x+"px";
+    document.body.appendChild(el);
+    items.push({el,type:"letter"});
+    return;
+  }
+
   const el=document.createElement("div");
   el.className="item "+type;
-  el.x=Math.random()*(innerWidth-40);
   el.y=-60;
-  el.speed=(type==="meteor"?3:2)+Math.random()*0.3;
+  el.x=Math.random()*(innerWidth-40);
+  el.speed=(type==="meteor"?3:2);
   el.style.left=el.x+"px";
   document.body.appendChild(el);
   items.push({el,type});
 }
 
-/* ÇARPIŞMA */
 function hit(a,b){
   return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
 }
 
-/* ANA DÖNGÜ */
 function loop(){
   if(!running) return;
-
   const panelRect=panel.getBoundingClientRect();
 
   for(let i=items.length-1;i>=0;i--){
     const o=items[i];
-    o.el.y+=o.el.speed;
+    o.el.y+=o.el.speed||2;
     o.el.style.top=o.el.y+"px";
-
     const r=o.el.getBoundingClientRect();
 
     if(hit(r,panelRect)){
       if(o.type==="star") score+=10;
       if(o.type==="heart" && lives<3) lives++;
       if(o.type==="meteor") lives--;
+      if(o.type==="letter"){
+        filledLetters.add(o.el.letter);
+        activeLetters.delete(o.el.letter);
+        document.querySelector(`[data-letter="${o.el.letter}"]`)
+          .classList.add("filled");
+      }
       scoreEl.textContent=score;
       updateLives();
       o.el.remove();
@@ -196,18 +257,19 @@ function loop(){
     }
 
     if(o.el.y>innerHeight+50){
+      if(o.type==="letter") activeLetters.delete(o.el.letter);
       o.el.remove();
       items.splice(i,1);
     }
   }
-
   requestAnimationFrame(loop);
 }
 
-/* SPAWN ZAMANLAMA (DENGELİ) */
-setInterval(()=>spawn("star"),850+Math.random()*200);
-setInterval(()=>spawn("heart"),4800+Math.random()*600);
-setInterval(()=>spawn("meteor"),1150+Math.random()*200);
+/* SPAWN */
+setInterval(()=>spawn("star"),900);
+setInterval(()=>spawn("heart"),5000);
+setInterval(()=>spawn("meteor"),1200);
+setInterval(()=>spawn("letter"),1800);
 
 loop();
 </script>
