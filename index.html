@@ -2,325 +2,258 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>YILDIZ Ultimate</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>YILDIZ – Ultimate Cinematic</title>
 
 <style>
-/* ==== GENEL ==== */
 html,body{
   margin:0;padding:0;width:100%;height:100%;
   overflow:hidden;
+  background:#05010a;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  background:radial-gradient(circle at top,#2b0b4f,#05010a);
   touch-action:none;
 }
-body::before{
-  content:"";position:fixed;inset:0;
+
+/* ===== PARALAKS KATMANLARI ===== */
+#parallax{
+  position:fixed;inset:0;overflow:hidden;
+}
+.stars{
+  position:absolute;inset:-50%;
+  background-repeat:repeat;
+}
+.layer1{
   background-image:
     radial-gradient(1px 1px at 20% 30%,#fff,transparent),
-    radial-gradient(1px 1px at 70% 60%,#fff,transparent),
-    radial-gradient(1px 1px at 40% 80%,#fff,transparent);
-  opacity:.18;pointer-events:none;
+    radial-gradient(1px 1px at 70% 60%,#fff,transparent);
+  opacity:.25;
+}
+.layer2{
+  background-image:
+    radial-gradient(1px 1px at 40% 20%,#fff,transparent),
+    radial-gradient(1px 1px at 80% 80%,#fff,transparent);
+  opacity:.18;
+}
+.layer3{
+  background-image:
+    radial-gradient(1px 1px at 10% 80%,#fff,transparent),
+    radial-gradient(1px 1px at 60% 40%,#fff,transparent);
+  opacity:.12;
 }
 
-/* ==== HUD ==== */
+/* ===== SCENE ===== */
+#scene{
+  position:fixed;inset:0;
+  overflow:hidden;
+  transition:transform .15s;
+}
+
+/* HUD */
 #hud{
-  position:fixed;top:14px;left:14px;
-  color:white;font-size:18px;z-index:20;
+  position:fixed;top:12px;left:12px;
+  color:#fff;z-index:30;font-size:15px;
 }
-#level,#mission{
-  display:block;font-size:14px;opacity:.85
-}
+#level,#mission{display:block;margin-top:4px}
 
-/* ==== HİKÂYE ==== */
-#story{
-  position:fixed;top:70px;left:50%;
-  transform:translateX(-50%);
-  font-size:18px;color:#ffd1e8;
-  text-shadow:0 0 12px rgba(255,120,200,.8);
-  opacity:0;transition:.6s;z-index:30;
-}
-#story.show{opacity:1}
-
-/* ==== PANEL ==== */
+/* Panel */
 #panel{
-  position:fixed;bottom:90px;left:50%;
+  position:fixed;bottom:80px;left:50%;
   transform:translateX(-50%);
-  width:70px;height:14px;border-radius:20px;
+  width:80px;height:14px;
+  border-radius:20px;
   background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
-  box-shadow:0 0 35px rgba(255,80,180,1);
-  z-index:15;transition:.2s;
-}
-#panel.glow{box-shadow:0 0 55px rgba(255,150,220,1)}
-
-/* ==== HARF KUTULARI ==== */
-#boxes{
-  position:fixed;bottom:30px;left:50%;
-  transform:translateX(-50%);
-  display:flex;gap:10px;z-index:16;
-}
-.box{
-  width:34px;height:34px;border-radius:8px;
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.6);
-  color:white;display:flex;
-  align-items:center;justify-content:center;
-  font-weight:bold;font-size:16px;
-}
-.box.filled{
-  background:rgba(255,255,255,.35);
-  box-shadow:0 0 18px rgba(255,200,220,1);
-  animation:pop .35s ease;
-}
-@keyframes pop{
-  0%{transform:scale(.4)}
-  100%{transform:scale(1)}
+  box-shadow:0 0 36px rgba(255,80,180,.95);
+  z-index:20;
 }
 
-/* ==== OBJELER ==== */
-.item{position:absolute;top:-80px;pointer-events:none}
+/* Objeler */
+.item{position:absolute;top:-150px;pointer-events:none}
+
+/* Yıldız */
 .star{
   width:18px;height:18px;
   background:radial-gradient(circle,#ffe58a,#ffb300);
-  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  clip-path:polygon(
+    50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,
+    50% 70%,21% 91%,32% 57%,2% 35%,39% 35%
+  );
   box-shadow:0 0 16px gold;
 }
-.heart{
-  width:22px;height:22px;background:#ff4d6d;
-  transform:rotate(-45deg);border-radius:50% 50% 0 0;
-}
-.heart::before,.heart::after{
-  content:"";position:absolute;
-  width:22px;height:22px;background:#ff4d6d;border-radius:50%;
-}
-.heart::before{top:-11px}
-.heart::after{left:11px}
+
+/* Meteor */
 .meteor{
-  width:18px;height:18px;border-radius:50%;
-  background:radial-gradient(circle,#aaa,#333);
+  width:22px;height:20px;
+  border-radius:45% 55% 60% 40%;
+  background:radial-gradient(circle at 30% 30%,#fff,#ff3b00,#2b0000);
+  box-shadow:0 0 32px rgba(255,90,0,.95);
 }
-.bomb{
-  width:18px;height:18px;border-radius:50%;
-  background:#000;box-shadow:0 0 18px red;
-}
-.letter{
-  font-size:24px;font-weight:bold;
-  color:#ffd54f;text-shadow:0 0 14px gold;
+.meteor::after{
+  content:"";
+  position:absolute;
+  top:-100px;left:50%;
+  transform:translateX(-50%);
+  width:10px;height:100px;
+  background:linear-gradient(to top,rgba(255,150,0,.95),transparent);
+  filter:blur(2px);
 }
 
-/* ==== FINAL ==== */
+/* Kara Delik */
+.blackhole{
+  width:170px;height:170px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,#000 50%,#000 58%),
+    conic-gradient(from 0deg,#ffe066,#ff9800,#ffe066);
+  animation:spin 2.2s linear infinite,pulse 3s ease-in-out infinite;
+  box-shadow:0 0 140px rgba(255,210,0,.9);
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.15)}
+}
+
+/* ===== CINEMATIC FINAL ===== */
 #final{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.88);
-  color:white;z-index:40;
-  align-items:center;justify-content:center;
-  flex-direction:column;text-align:center;
+  display:none;
+  position:fixed;inset:0;
+  background:radial-gradient(circle,#000,#000 70%);
+  color:#fff;
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  text-align:center;
 }
 #final h1{
-  font-size:34px;
-  animation:zoom 1.4s ease forwards;
+  font-size:42px;
+  letter-spacing:6px;
+  margin-bottom:20px;
+  opacity:0;
+  animation:fadeIn 3s forwards;
+}
+#final p{
+  opacity:0;
+  animation:fadeIn 3s forwards 2s;
+}
+@keyframes fadeIn{
+  to{opacity:1}
 }
 #final button{
-  margin-top:20px;padding:12px 28px;
-  border:none;border-radius:18px;
-  background:#ff4d6d;color:white;
+  margin-top:30px;
+  padding:14px 36px;
+  border:none;
+  border-radius:24px;
   font-size:18px;
+  background:#ff4d6d;
+  color:#fff;
 }
-@keyframes zoom{
-  0%{transform:scale(.2);opacity:0}
-  100%{transform:scale(1);opacity:1}
+
+/* ===== GAME OVER ===== */
+#over{
+  display:none;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.85);
+  color:#fff;
+  z-index:90;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+#over button{
+  margin-top:20px;
+  padding:14px 32px;
+  border:none;
+  border-radius:24px;
+  font-size:18px;
+  background:#ff4d6d;
+  color:#fff;
 }
 </style>
 </head>
 
 <body>
 
-<div id="hud">
-  Skor: <span id="score">0</span>
-  <span id="lives">❤️❤️❤️</span>
-  <span id="level">Level: 1</span>
-  <span id="mission"></span>
+<div id="parallax">
+  <div class="stars layer1"></div>
+  <div class="stars layer2"></div>
+  <div class="stars layer3"></div>
 </div>
 
-<div id="story"></div>
-<div id="boxes"></div>
-<div id="panel"></div>
+<div id="scene">
+  <div id="hud">
+    Skor: <span id="score">0</span>
+    <span id="level">Level: 1</span>
+    <span id="mission">Görev: Hayatta kal</span>
+  </div>
+  <div id="panel"></div>
+</div>
 
 <div id="final">
-  <h1 id="finalText"></h1>
-  <button onclick="restart()">Tekrar Oyna ⭐</button>
+  <h1>YILDIZ</h1>
+  <p>Bu yolculuk kalpten kalbe</p>
+  <button onclick="location.reload()">Tekrar Oyna</button>
+</div>
+
+<div id="over">
+  <div>Oyun Bitti</div>
+  <button onclick="location.reload()">Tekrar Oyna</button>
 </div>
 
 <script>
-/* ==== DEĞİŞKENLER ==== */
-let score=0,lives=3,level=1,running=true;
-let speed=1;
-const letters=["Y","I","L","D","I","Z"];
-const max={Y:1,I:2,L:1,D:1,Z:1};
-const filled={Y:0,I:0,L:0,D:0,Z:0};
-const active=[],items=[];
+/* ===== SES MOTORU ===== */
+const AudioCtx=window.AudioContext||window.webkitAudioContext;
+const audio=new AudioCtx();
+function drone(freq,vol){
+  const o=audio.createOscillator();
+  const g=audio.createGain();
+  o.frequency.value=freq;
+  o.type="sine";
+  g.gain.value=vol;
+  o.connect(g).connect(audio.destination);
+  o.start();
+  return o;
+}
+const bg=drone(40,0.04);
 
-/* ==== ELEMENTLER ==== */
-const panel=document.getElementById("panel");
+/* ===== OYUN ===== */
+let score=0,level=1,running=true,boss=false,timeScale=1;
+const scene=document.getElementById("scene");
 const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
 const levelEl=document.getElementById("level");
 const missionEl=document.getElementById("mission");
-const story=document.getElementById("story");
-const boxes=document.getElementById("boxes");
-const final=document.getElementById("final");
-const finalText=document.getElementById("finalText");
 
-/* ==== KUTULAR ==== */
-letters.forEach(l=>{
-  const b=document.createElement("div");
-  b.className="box";b.dataset.letter=l;
-  boxes.appendChild(b);
-});
-
-/* ==== PANEL KONTROL ==== */
-let drag=false;
-panel.addEventListener("touchstart",()=>drag=true);
-window.addEventListener("touchend",()=>drag=false);
-window.addEventListener("touchmove",e=>{
-  if(!drag)return;
-  let x=e.touches[0].clientX-panel.offsetWidth/2;
-  x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
-  panel.style.left=x+"px";
-});
-
-/* ==== YARDIMCI ==== */
-const collide=(a,b)=>!(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
-const glow=()=>{panel.classList.add("glow");setTimeout(()=>panel.classList.remove("glow"),200)};
-const shake=()=>{document.body.style.transform="translateX(5px)";setTimeout(()=>document.body.style.transform="",90)};
-const update=()=>{scoreEl.textContent=score;livesEl.textContent="❤️".repeat(lives)};
-
-/* ==== HİKÂYE / GÖREV ==== */
-const missions=[
-  "⭐ 3 yıldız yakala",
-  "❤️ Can kaybetme",
-  "☄️ Meteorlerden kaç",
-  "🔤 Harf topla",
-  "💖 Kalbine güven"
-];
-
-function showStory(txt){
-  story.textContent=txt;
-  story.classList.add("show");
-  setTimeout(()=>story.classList.remove("show"),2200);
+/* Paralaks */
+let py=0;
+function parallax(){
+  py+=0.15*timeScale;
+  document.querySelector(".layer1").style.transform=`translateY(${py*0.3}px)`;
+  document.querySelector(".layer2").style.transform=`translateY(${py*0.6}px)`;
+  document.querySelector(".layer3").style.transform=`translateY(${py}px)`;
 }
 
-/* ==== SPAWN ==== */
-function spawn(type){
-  if(!running)return;
-  if(type==="letter"){
-    const allowed=level<4?["Y","I","L"]:letters;
-    const pool=allowed.filter(l=>filled[l]<max[l]&&!active.includes(l));
-    if(!pool.length)return;
-    const l=pool[Math.floor(Math.random()*pool.length)];
-    active.push(l);
-    const el=document.createElement("div");
-    el.className="item letter";el.textContent=l;el.letter=l;
-    el.y=-40;el.x=Math.random()*(innerWidth-40);
-    el.style.left=el.x+"px";
-    document.body.appendChild(el);
-    items.push({el,type});
-    return;
-  }
-  const el=document.createElement("div");
-  el.className="item "+type;
-  el.y=-60;el.x=Math.random()*(innerWidth-40);
-  el.speed=(type==="meteor"||type==="bomb"?3:2)*speed;
-  el.style.left=el.x+"px";
-  document.body.appendChild(el);
-  items.push({el,type});
+/* Final */
+function cinematicFinal(){
+  running=false;
+  timeScale=0.2;
+  bg.frequency.linearRampToValueAtTime(20,audio.currentTime+3);
+  setTimeout(()=>{
+    document.getElementById("final").style.display="flex";
+  },2000);
 }
 
-/* ==== KALP YAĞMURU ==== */
-function heartRain(){
-  for(let i=0;i<50;i++){
-    setTimeout(()=>spawn("heart"),i*70);
-  }
-}
-
-/* ==== LOOP ==== */
+/* Basit loop */
 function loop(){
-  if(!running)return;
-  const p=panel.getBoundingClientRect();
-  for(let i=items.length-1;i>=0;i--){
-    const o=items[i];
-    o.el.y+=(o.el.speed||2);
-    o.el.style.top=o.el.y+"px";
-    const r=o.el.getBoundingClientRect();
-    if(collide(r,p)){
-      if(o.type==="star"){score+=10;glow()}
-      if(o.type==="heart"&&lives<3){lives++;navigator.vibrate?.(40)}
-      if(o.type==="meteor"){lives--;shake()}
-      if(o.type==="bomb"){lives=0}
-      if(o.type==="letter"){
-        filled[o.el.letter]++;
-        const box=[...boxes.children].find(b=>b.dataset.letter===o.el.letter&&b.textContent==="");
-        if(box){box.textContent=o.el.letter;box.classList.add("filled")}
-        active.splice(active.indexOf(o.el.letter),1);
-        if(Object.values(filled).reduce((a,b)=>a+b,0)===6){
-          running=false;
-          setTimeout(()=>{
-            heartRain();
-            finalText.textContent="💖 Kalbim hep sende 💖";
-            final.style.display="flex";
-          },1200);
-          return;
-        }
-      }
-      update();
-      o.el.remove();items.splice(i,1);
-      if(lives<=0){
-        running=false;
-        finalText.textContent="Kaybettin 💔";
-        final.style.display="flex";
-        return;
-      }
-    }
-    if(o.el.y>innerHeight+80){
-      if(o.type==="letter")active.splice(active.indexOf(o.el.letter),1);
-      o.el.remove();items.splice(i,1);
-    }
+  if(running){
+    score+=0.1*timeScale;
+    scoreEl.textContent=Math.floor(score);
+    if(score>300) cinematicFinal();
+    parallax();
   }
   requestAnimationFrame(loop);
 }
-
-/* ==== LEVEL ==== */
-setInterval(()=>{
-  const nl=Math.floor(score/150)+1;
-  if(nl!==level){
-    level=nl;levelEl.textContent="Level: "+level;
-    speed+=0.15;
-    missionEl.textContent="Görev: "+missions[(level-1)%missions.length];
-    showStory("Level "+level+" ⭐");
-  }
-},600);
-
-/* ==== ZAMANLAYICILAR ==== */
-setInterval(()=>spawn("star"),800);
-setInterval(()=>spawn("meteor"),1300);
-setInterval(()=>spawn("bomb"),5200);
-setInterval(()=>spawn("heart"),4800);
-setInterval(()=>spawn("letter"),6000);
-
-/* ==== RESET ==== */
-function restart(){
-  score=0;lives=3;level=1;speed=1;running=true;
-  Object.keys(filled).forEach(k=>filled[k]=0);
-  [...boxes.children].forEach(b=>{b.textContent="";b.classList.remove("filled")});
-  items.forEach(i=>i.el.remove());
-  items.length=0;active.length=0;
-  final.style.display="none";
-  update();
-  loop();
-}
-
-update();
 loop();
 </script>
+
 </body>
 </html>
