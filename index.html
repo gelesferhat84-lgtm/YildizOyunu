@@ -1,310 +1,274 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>YILDIZ Oyunu</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  background: radial-gradient(circle at top, #0b0f2a, #02040f);
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-  color: white;
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:radial-gradient(circle at top,#2b0b4f,#05010a);
+  touch-action:none;
 }
-
-/* PANEL */
-#panel {
-  position: absolute;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90px;
-  height: 18px;
-  background: linear-gradient(180deg, #ff4d6d, #c9184a);
-  border-radius: 10px;
-  touch-action: none;
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%,#fff,transparent),
+    radial-gradient(1px 1px at 70% 60%,#fff,transparent),
+    radial-gradient(1px 1px at 40% 80%,#fff,transparent);
+  opacity:.18;
+  pointer-events:none;
 }
-
-/* HARF KUTULARI */
-#boxes {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  display: flex;
-  gap: 6px;
+#hud{
+  position:fixed;
+  top:14px;
+  left:14px;
+  color:white;
+  font-size:18px;
+  z-index:20;
 }
-
-.box {
-  width: 34px;
-  height: 34px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.35);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 20px;
+#lives{margin-left:6px}
+#panel{
+  position:fixed;
+  bottom:80px;
+  left:50%;
+  transform:translateX(-50%);
+  width:60px;
+  height:14px;
+  border-radius:20px;
+  background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
+  box-shadow:0 0 30px rgba(255,80,180,.9);
+  z-index:15;
 }
-
-/* HARFLER */
-.letter {
-  position: absolute;
-  font-size: 26px;
-  font-weight: bold;
-  color: #fff;
+#letterBoxes{
+  position:fixed;
+  bottom:20px;
+  left:10px;
+  display:flex;
+  gap:6px;
+  z-index:16;
 }
-
-/* METEOR */
-.meteor {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  background: radial-gradient(circle, #ff9f1c, #d00000);
-  border-radius: 50%;
+.box{
+  width:28px;
+  height:28px;
+  border-radius:6px;
+  background:rgba(255,255,255,.12);
+  backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.5);
+  box-shadow:inset 0 0 8px rgba(255,255,255,.4);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:14px;
 }
-
-/* KALP */
-.heart {
-  position: absolute;
-  font-size: 22px;
-  color: #ff4d6d;
+.box.filled{
+  background:rgba(255,255,255,.22);
 }
-
-/* UI */
-#ui {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  font-size: 16px;
+.item{
+  position:absolute;
+  top:-80px;
+  pointer-events:none;
 }
-
-#gameOver {
-  display: none;
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  font-size: 22px;
+.star{
+  width:18px;height:18px;
+  background:radial-gradient(circle,#ffe58a,#ffb300);
+  clip-path:polygon(
+    50% 0%,61% 35%,98% 35%,
+    68% 57%,79% 91%,50% 70%,
+    21% 91%,32% 57%,2% 35%,39% 35%
+  );
+  box-shadow:0 0 12px gold;
 }
-button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  font-size: 16px;
+.heart{
+  width:22px;height:22px;
+  background:#ff4d6d;
+  transform:rotate(-45deg);
+  border-radius:50% 50% 0 0;
+}
+.heart::before,.heart::after{
+  content:"";
+  position:absolute;
+  width:22px;height:22px;
+  background:#ff4d6d;
+  border-radius:50%;
+}
+.heart::before{top:-11px}
+.heart::after{left:11px}
+.meteor{
+  width:16px;height:16px;
+  border-radius:50%;
+  background:radial-gradient(circle,#ffb74d,#e65100);
+  box-shadow:0 0 28px rgba(255,140,0,.9);
+}
+.meteor::after{
+  content:"";
+  position:absolute;
+  top:-50px;
+  left:50%;
+  transform:translateX(-50%);
+  width:6px;height:50px;
+  background:linear-gradient(to top,rgba(255,140,0,.8),transparent);
+}
+.letter{
+  color:white;
+  font-size:20px;
+  font-weight:bold;
+  text-shadow:0 0 10px rgba(255,255,255,.7);
+}
+#over{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  color:white;
+  font-size:32px;
+  z-index:30;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+}
+#over button{
+  margin-top:15px;
+  padding:10px 22px;
+  border:none;
+  border-radius:14px;
+  background:#ff4d6d;
+  color:white;
+  font-size:18px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="ui">
-  ❤️ <span id="lives">3</span>
+<div id="hud">
+  Skor: <span id="score">0</span>
+  <span id="lives">❤️❤️❤️</span>
 </div>
 
+<div id="letterBoxes"></div>
 <div id="panel"></div>
-<div id="boxes"></div>
 
-<div id="gameOver">
-  <div id="finalText"></div>
+<div id="over">
+  Oyun Bitti
   <button onclick="location.reload()">Tekrar Oyna</button>
 </div>
 
 <script>
-/* =======================
-   OYUN DEĞİŞKENLERİ
-======================= */
-const panel = document.getElementById("panel");
-const boxesEl = document.getElementById("boxes");
-const livesEl = document.getElementById("lives");
-const gameOverEl = document.getElementById("gameOver");
-const finalText = document.getElementById("finalText");
+let score=0,lives=3,running=true;
 
-let lives = 3;
-let gameRunning = true;
+/* 🔧 I HARFİ 2 AYRI GÖREV */
+const letters=["Y","I1","L","D","I2","Z"];
+const displayMap={I1:"I",I2:"I"};
 
-/* 🔑 KRİTİK KISIM – I HARFİ İKİ KEZ */
-const letterSlots = [
-  { char: "Y", filled: false },
-  { char: "I", filled: false },
-  { char: "L", filled: false },
-  { char: "D", filled: false },
-  { char: "I", filled: false },
-  { char: "Z", filled: false }
-];
+const filled=new Set();
+const active=new Set();
+const items=[];
 
-/* KUTULARI OLUŞTUR */
-letterSlots.forEach(slot => {
-  const box = document.createElement("div");
-  box.className = "box";
-  box.textContent = "";
-  boxesEl.appendChild(box);
+const panel=document.getElementById("panel");
+const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
+const over=document.getElementById("over");
+const boxes=document.getElementById("letterBoxes");
+
+/* KUTULAR */
+letters.forEach(l=>{
+  const b=document.createElement("div");
+  b.className="box";
+  b.dataset.letter=l;
+  b.textContent=displayMap[l]||"";
+  boxes.appendChild(b);
 });
 
-/* PANEL HAREKET */
-let dragging = false;
-panel.addEventListener("pointerdown", () => dragging = true);
-window.addEventListener("pointerup", () => dragging = false);
-window.addEventListener("pointermove", e => {
-  if (!dragging) return;
-  let x = e.clientX - panel.offsetWidth / 2;
-  x = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, x));
-  panel.style.left = x + "px";
+/* PANEL */
+let dragging=false;
+panel.addEventListener("touchstart",()=>dragging=true);
+window.addEventListener("touchend",()=>dragging=false);
+window.addEventListener("touchmove",e=>{
+  if(!dragging)return;
+  let x=e.touches[0].clientX-panel.offsetWidth/2;
+  x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
+  panel.style.left=x+"px";
 });
 
-/* HARF SPAWN */
-function spawnLetter() {
-  if (!gameRunning) return;
+function updateLives(){livesEl.textContent="❤️".repeat(lives)}
+function collide(a,b){return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom)}
 
-  const available = letterSlots
-    .map((s, i) => ({...s, index: i}))
-    .filter(s => !s.filled);
+function spawn(type){
+  if(type==="letter"){
+    const pool=letters.filter(l=>!filled.has(l)&&!active.has(l));
+    if(!pool.length)return;
+    const l=pool[Math.floor(Math.random()*pool.length)];
+    active.add(l);
 
-  if (available.length === 0) {
-    finishGame();
+    const el=document.createElement("div");
+    el.className="item letter";
+    el.textContent=displayMap[l]||l;
+    el.letter=l;
+    el.y=-40;
+    el.x=Math.random()*(innerWidth-40);
+    el.style.left=el.x+"px";
+    document.body.appendChild(el);
+    items.push({el,type});
     return;
   }
-
-  const chosen = available[Math.floor(Math.random() * available.length)];
-
-  const el = document.createElement("div");
-  el.className = "letter";
-  el.textContent = chosen.char;
-  el.dataset.index = chosen.index;
-  el.style.left = Math.random() * (window.innerWidth - 30) + "px";
-  el.style.top = "-30px";
+  const el=document.createElement("div");
+  el.className="item "+type;
+  el.y=-60;
+  el.x=Math.random()*(innerWidth-40);
+  el.speed=(type==="meteor"?3:2);
+  el.style.left=el.x+"px";
   document.body.appendChild(el);
-
-  let y = -30;
-  const fall = setInterval(() => {
-    if (!gameRunning) {
-      clearInterval(fall);
-      el.remove();
-      return;
-    }
-
-    y += 2;
-    el.style.top = y + "px";
-
-    const panelRect = panel.getBoundingClientRect();
-    const rect = el.getBoundingClientRect();
-
-    if (
-      rect.bottom >= panelRect.top &&
-      rect.left < panelRect.right &&
-      rect.right > panelRect.left
-    ) {
-      const idx = el.dataset.index;
-      letterSlots[idx].filled = true;
-      boxesEl.children[idx].textContent = letterSlots[idx].char;
-      el.remove();
-      clearInterval(fall);
-    }
-
-    if (y > window.innerHeight) {
-      el.remove();
-      clearInterval(fall);
-    }
-  }, 16);
+  items.push({el,type});
 }
 
-/* METEOR */
-function spawnMeteor() {
-  if (!gameRunning) return;
-
-  const m = document.createElement("div");
-  m.className = "meteor";
-  m.style.left = Math.random() * (window.innerWidth - 30) + "px";
-  m.style.top = "-30px";
-  document.body.appendChild(m);
-
-  let y = -30;
-  const fall = setInterval(() => {
-    y += 3;
-    m.style.top = y + "px";
-
-    const panelRect = panel.getBoundingClientRect();
-    const rect = m.getBoundingClientRect();
-
-    if (
-      rect.bottom >= panelRect.top &&
-      rect.left < panelRect.right &&
-      rect.right > panelRect.left
-    ) {
-      lives--;
-      livesEl.textContent = lives;
-      m.remove();
-      clearInterval(fall);
-      if (lives <= 0) endGame(false);
+function loop(){
+  if(!running)return;
+  const p=panel.getBoundingClientRect();
+  for(let i=items.length-1;i>=0;i--){
+    const o=items[i];
+    o.el.y+=o.el.speed||2;
+    o.el.style.top=o.el.y+"px";
+    const r=o.el.getBoundingClientRect();
+    if(collide(r,p)){
+      if(o.type==="star")score+=10;
+      if(o.type==="heart"&&lives<3)lives++;
+      if(o.type==="meteor")lives--;
+      if(o.type==="letter"){
+        filled.add(o.el.letter);
+        active.delete(o.el.letter);
+        const box=document.querySelector(`[data-letter="${o.el.letter}"]`);
+        box.textContent=displayMap[o.el.letter]||o.el.letter;
+        box.classList.add("filled");
+      }
+      scoreEl.textContent=score;
+      updateLives();
+      o.el.remove();items.splice(i,1);
+      if(lives<=0){running=false;over.style.display="flex";}
     }
-
-    if (y > window.innerHeight) {
-      m.remove();
-      clearInterval(fall);
+    if(o.el.y>innerHeight+60){
+      if(o.type==="letter")active.delete(o.el.letter);
+      o.el.remove();items.splice(i,1);
     }
-  }, 16);
+  }
+  requestAnimationFrame(loop);
 }
 
-/* KALP */
-function spawnHeart() {
-  if (!gameRunning) return;
-  const h = document.createElement("div");
-  h.className = "heart";
-  h.textContent = "❤";
-  h.style.left = Math.random() * (window.innerWidth - 20) + "px";
-  h.style.top = "-20px";
-  document.body.appendChild(h);
-
-  let y = -20;
-  const fall = setInterval(() => {
-    y += 2;
-    h.style.top = y + "px";
-
-    const panelRect = panel.getBoundingClientRect();
-    const rect = h.getBoundingClientRect();
-
-    if (
-      rect.bottom >= panelRect.top &&
-      rect.left < panelRect.right &&
-      rect.right > panelRect.left
-    ) {
-      lives++;
-      livesEl.textContent = lives;
-      h.remove();
-      clearInterval(fall);
-    }
-
-    if (y > window.innerHeight) {
-      h.remove();
-      clearInterval(fall);
-    }
-  }, 16);
-}
-
-/* BİTİŞ */
-function finishGame() {
-  endGame(true);
-}
-
-function endGame(win) {
-  gameRunning = false;
-  gameOverEl.style.display = "flex";
-  finalText.textContent = win
-    ? "⭐ YILDIZ TAMAMLANDI!"
-    : "☄️ OYUN BİTTİ";
-}
-
-/* SPAWN DÖNGÜLERİ */
-setInterval(spawnLetter, 1800);
-setInterval(spawnMeteor, 1400);
-setInterval(() => {
-  if (Math.random() < 0.25) spawnHeart();
-}, 3000);
+setInterval(()=>spawn("star"),900);
+setInterval(()=>spawn("heart"),5200);
+setInterval(()=>spawn("meteor"),1200);
+setInterval(()=>spawn("letter"),1800);
+loop();
 </script>
 </body>
 </html>
