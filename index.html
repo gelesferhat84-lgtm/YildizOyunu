@@ -2,222 +2,146 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Nebula Love Game</title>
+<title>Nebula Glass Scene</title>
 <style>
-* { box-sizing: border-box; margin:0; padding:0; font-family: Arial, sans-serif; }
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
-  background: radial-gradient(circle at top, #3a0f5c, #05010a 70%);
-  overflow: hidden;
-  color: white;
+  height:100vh;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 20% 30%, #6a1fa0, transparent 40%),
+    radial-gradient(circle at 80% 20%, #ff4fd8, transparent 45%),
+    radial-gradient(circle at 50% 80%, #1b0a3d, transparent 50%),
+    #05010a;
 }
 
-/* Skor Panel */
-#scoreBoard {
-  position: absolute;
-  top: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 30px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  font-size: 22px;
+/* Yıldız Parçacıkları */
+.star {
+  position:absolute;
+  font-size:48px;
+  color:#fff6b0;
+  text-shadow:
+    0 0 15px #ffd700,
+    0 0 30px #ffef9a,
+    0 0 60px rgba(255,215,0,0.8);
+  animation: float 6s linear infinite, pulse 2s ease-in-out infinite;
 }
 
-/* Alt Panel */
-#bottomPanel {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-}
-
-/* Cam Kutular */
-.box {
-  width: 70px;
-  height: 70px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 36px;
-}
-
-/* Ateş Butonu */
-#fireBtn {
-  position: absolute;
-  right: 20px;
-  bottom: 40px;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ff4d4d, #8b0000);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  cursor: pointer;
-  animation: pulse 1.5s infinite;
+@keyframes float {
+  from { transform: translateY(-100px); }
+  to { transform: translateY(110vh); }
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0%,100% { opacity:0.7; }
+  50% { opacity:1; }
 }
 
-/* Objeler */
-.falling {
-  position: absolute;
-  top: -50px;
-  font-size: 36px;
-  text-shadow: 0 0 15px gold;
+/* Cam Panel */
+#glassPanel {
+  position:absolute;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  width:80%;
+  height:140px;
+  border-radius:30px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,150,220,0.35),
+      rgba(255,150,220,0.1)
+    );
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border:1px solid rgba(255,180,230,0.6);
+  box-shadow:
+    inset 0 0 30px rgba(255,180,230,0.4),
+    0 0 40px rgba(255,100,200,0.4);
 }
 
-.star { color: gold; }
-.letter { color: #fff; text-shadow: 0 0 20px #ffd700; }
+/* Cam Parlama */
+#glassPanel::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:30px;
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,0.35),
+      transparent 60%
+    );
+  opacity:0.5;
+  pointer-events:none;
+}
+
+/* Objeler (Büyük!) */
+.object {
+  position:absolute;
+  top:-80px;
+  font-size:64px;
+  text-shadow:0 0 25px currentColor;
+}
+
+.letter {
+  color:#ffffff;
+  text-shadow:
+    0 0 20px #ffd700,
+    0 0 40px rgba(255,215,0,0.8);
+}
+
 .meteor {
-  color: red;
-  text-shadow: 0 0 25px orange;
-}
-
-/* Final */
-#finalScreen {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  text-align: center;
-}
-#finalScreen h1 { font-size: 40px; margin-bottom: 20px; }
-#finalScreen button {
-  padding: 15px 30px;
-  font-size: 20px;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
+  color:#ff3b3b;
+  text-shadow:
+    0 0 25px #ff0000,
+    0 0 60px orange;
 }
 </style>
 </head>
 
 <body>
 
-<div id="scoreBoard">⭐ Skor: <span id="score">0</span></div>
-
-<div id="bottomPanel"></div>
-
-<div id="fireBtn">🔥</div>
-
-<div id="finalScreen">
-  <h1>❤️ Sen Kazandın ❤️</h1>
-  <p id="finalScore"></p>
-  <button onclick="restartGame()">🔁 Tekrar Oyna</button>
-</div>
+<div id="glassPanel"></div>
 
 <script>
-let score = 0;
-let letters = ["Y","I","L","D","I","Z"];
-let activeLetters = [...letters];
-let meteorHits = 0;
-let gameInterval;
+// Parlayan yıldızlar
+function spawnStar() {
+  const s = document.createElement("div");
+  s.className = "star";
+  s.textContent = "⭐";
+  s.style.left = Math.random() * window.innerWidth + "px";
+  s.style.animationDuration = (4 + Math.random()*3) + "s";
+  document.body.appendChild(s);
+  setTimeout(() => s.remove(), 7000);
+}
+setInterval(spawnStar, 600);
 
-/* Kutuları oluştur */
-const bottomPanel = document.getElementById("bottomPanel");
-letters.forEach(l => {
-  const box = document.createElement("div");
-  box.className = "box";
-  box.dataset.letter = l;
-  bottomPanel.appendChild(box);
-});
+// Demo objeler
+function spawnObject(type) {
+  const o = document.createElement("div");
+  o.className = "object " + type;
+  o.textContent = type === "letter" ? "Y" : "☄️";
+  o.style.left = Math.random() * (window.innerWidth - 80) + "px";
+  document.body.appendChild(o);
 
-/* Obje üret */
-function spawnObject() {
-  const obj = document.createElement("div");
-  const rand = Math.random();
+  let y = -80;
+  let speed = 2 + Math.random()*2;
 
-  if (rand < 0.4) {
-    obj.textContent = "⭐";
-    obj.className = "falling star";
-    obj.dataset.type = "star";
-  } else if (rand < 0.7 && activeLetters.length) {
-    const letter = activeLetters[Math.floor(Math.random()*activeLetters.length)];
-    obj.textContent = letter;
-    obj.className = "falling letter";
-    obj.dataset.type = "letter";
-    obj.dataset.letter = letter;
-  } else {
-    obj.textContent = "☄️";
-    obj.className = "falling meteor";
-    obj.dataset.type = "meteor";
-    obj.dataset.hp = 5;
-  }
-
-  obj.style.left = Math.random() * (window.innerWidth - 50) + "px";
-  document.body.appendChild(obj);
-
-  let top = -50;
   const fall = setInterval(() => {
-    top += 3;
-    obj.style.top = top + "px";
+    y += speed;
+    o.style.top = y + "px";
 
-    if (top > window.innerHeight - 120) {
-      handleCollision(obj);
+    if (y > window.innerHeight - 180) {
+      o.style.opacity = 0;
       clearInterval(fall);
-      obj.remove();
+      setTimeout(() => o.remove(), 300);
     }
-  }, 20);
+  }, 16);
 }
 
-/* Çarpışma */
-function handleCollision(obj) {
-  if (obj.dataset.type === "star") {
-    score += 10;
-  }
-  if (obj.dataset.type === "meteor") {
-    score = Math.max(0, score - 20);
-  }
-  if (obj.dataset.type === "letter") {
-    const box = [...document.querySelectorAll(".box")]
-      .find(b => b.dataset.letter === obj.dataset.letter && !b.textContent);
-    if (box) {
-      box.textContent = obj.dataset.letter;
-      activeLetters = activeLetters.filter(l => l !== obj.dataset.letter);
-      if (activeLetters.length === 0) endGame();
-    }
-  }
-  document.getElementById("score").textContent = score;
-}
-
-/* Ateş */
-document.getElementById("fireBtn").onclick = () => {
-  document.querySelectorAll(".meteor").forEach(m => {
-    m.dataset.hp--;
-    if (m.dataset.hp <= 0) m.remove();
-  });
-};
-
-/* Oyun Bitir */
-function endGame() {
-  clearInterval(gameInterval);
-  document.getElementById("finalScore").textContent = "Toplam Skor: " + score;
-  document.getElementById("finalScreen").style.display = "flex";
-}
-
-/* Yeniden */
-function restartGame() {
-  location.reload();
-}
-
-/* Başlat */
-gameInterval = setInterval(spawnObject, 900);
+setInterval(() => spawnObject("letter"), 1800);
+setInterval(() => spawnObject("meteor"), 3500);
 </script>
 
 </body>
