@@ -77,12 +77,10 @@ body::before{
   font-weight:bold;
   font-size:14px;
 }
-.box.filled{
-  background:rgba(255,255,255,.22);
-}
+.box.filled{background:rgba(255,255,255,.22)}
 
-/* Düşen objeler */
-.item{position:absolute;top:-80px;pointer-events:none;}
+/* Objeler */
+.item{position:absolute;top:-80px;pointer-events:none}
 
 .star{
   width:18px;height:18px;
@@ -133,7 +131,7 @@ body::before{
   text-shadow:0 0 14px gold;
 }
 
-/* Game over */
+/* Oyun Sonu */
 #over{
   display:none;
   position:fixed;
@@ -169,7 +167,7 @@ body::before{
 <div id="panel"></div>
 
 <div id="over">
-  Oyun Bitti
+  <div id="endText"></div>
   <button onclick="location.reload()">Tekrar Oyna</button>
 </div>
 
@@ -188,6 +186,7 @@ const panel=document.getElementById("panel");
 const scoreEl=document.getElementById("score");
 const livesEl=document.getElementById("lives");
 const over=document.getElementById("over");
+const endText=document.getElementById("endText");
 const boxes=document.getElementById("letterBoxes");
 
 /* kutular */
@@ -209,18 +208,20 @@ window.addEventListener("touchmove",e=>{
   panel.style.left=x+"px";
 });
 
-function updateLives(){livesEl.textContent="❤️".repeat(lives);}
+function updateLives(){livesEl.textContent="❤️".repeat(lives)}
 function collide(a,b){
   return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
 }
 
 /* spawn */
 function spawn(type){
+  if(!running) return;
+
   if(type==="letter"){
     const pool=letters.filter(l=>{
-      const countFilled=filled.filter(x=>x===l).length;
-      const countTotal=letters.filter(x=>x===l).length;
-      return countFilled < countTotal && !active.includes(l);
+      const total=letters.filter(x=>x===l).length;
+      const done=filled.filter(x=>x===l).length;
+      return done<total && !active.includes(l);
     });
     if(!pool.length) return;
 
@@ -267,9 +268,21 @@ function loop(){
       if(o.type==="letter"){
         filled.push(o.el.letter);
         active.splice(active.indexOf(o.el.letter),1);
+
         const box=[...document.querySelectorAll(`[data-letter="${o.el.letter}"]`)]
           .find(b=>b.textContent==="");
-        if(box){box.textContent=o.el.letter;box.classList.add("filled");}
+        if(box){box.textContent=o.el.letter;box.classList.add("filled")}
+
+        /* 🎉 KAZANMA KONTROLÜ */
+        if(filled.length===letters.length){
+          running=false;
+          panel.style.display="none";
+          items.forEach(i=>i.el.remove());
+          items.length=0;
+          endText.textContent="Kazandın ✨";
+          over.style.display="flex";
+          return;
+        }
       }
 
       scoreEl.textContent=score;
@@ -279,9 +292,10 @@ function loop(){
 
       if(lives<=0){
         running=false;
+        endText.textContent="Kaybettin";
         over.style.display="flex";
+        return;
       }
-      continue;
     }
 
     if(o.el.y>innerHeight+60){
@@ -299,11 +313,9 @@ function loop(){
 setInterval(()=>spawn("star"),900);
 setInterval(()=>spawn("meteor"),1200);
 setInterval(()=>spawn("heart"),5200);
-
-/* 🔧 HARFLER ARTIK DAHA SEYREK */
 setInterval(()=>spawn("letter"),3200);
 
-/* 🔥 OYUN ZAMANLA HIZLANIR */
+/* hızlanma */
 setInterval(()=>{
   speedFactor+=0.05;
 },8000);
