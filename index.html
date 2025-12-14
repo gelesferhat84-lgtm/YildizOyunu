@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>YILDIZ – Gerçekçi Oyun</title>
+<title>YILDIZ – Uzay Tehdit</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 html,body{
@@ -30,171 +30,159 @@ canvas{display:block;}
 <canvas id="game"></canvas>
 
 <script>
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
 resize();
-window.addEventListener("resize", resize);
-
+addEventListener("resize",resize);
 function resize(){
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
 }
 
-/* 🌌 ARKA PLAN */
-const bgStars=[];
+/* 🌌 Arka plan yıldızları */
+const bg=[];
 for(let i=0;i<220;i++){
-  bgStars.push({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    r:Math.random()*1.4,
-    a:Math.random()*Math.PI*2,
-    s:Math.random()*0.02
-  });
+  bg.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.4,a:Math.random()*6});
 }
 
-/* 🌙 OYUNCU */
-const player={
-  x:canvas.width/2,
-  y:canvas.height-80,
-  r:36
-};
+/* 🌙 Oyuncu */
+const player={x:canvas.width/2,y:canvas.height-90,r:34};
 
-/* ⭐ YILDIZLAR */
+/* Oyun nesneleri */
 const stars=[];
-/* ☄️ METEORLAR */
 const meteors=[];
-/* 👾 UZAYLI */
 const aliens=[];
+const bullets=[];
 
 let score=0;
 let gameOver=false;
 
-/* 🎮 KONTROL */
-document.addEventListener("mousemove",e=>player.x=e.clientX);
-document.addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
+/* Kontrol */
+addEventListener("mousemove",e=>player.x=e.clientX);
+addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
 
-/* ⭐ YILDIZ */
+/* ⭐ Yıldız */
 setInterval(()=>{
-  if(gameOver) return;
-  stars.push({
-    x:Math.random()*canvas.width,
-    y:-20,
-    r:10+Math.random()*6,
-    v:1.5+Math.random()*1.2
-  });
+ if(!gameOver)
+ stars.push({x:Math.random()*canvas.width,y:-20,r:10,v:1.6});
 },700);
 
-/* ☄️ METEOR (HIZLI) */
+/* ☄️ Meteor */
 setInterval(()=>{
-  if(gameOver) return;
-  meteors.push({
-    x:Math.random()*canvas.width,
-    y:-40,
-    r:14+Math.random()*10,
-    v:5+Math.random()*3
-  });
-},1300);
+ if(!gameOver)
+ meteors.push({x:Math.random()*canvas.width,y:-40,r:16,v:5+Math.random()*3});
+},1400);
 
-/* 👾 UZAYLI (ARA SIRA) */
+/* 👾 Uzaylı */
 setInterval(()=>{
-  if(gameOver) return;
-  aliens.push({
-    x:-60,
-    y:60+Math.random()*200,
-    w:60,
-    h:26,
-    v:2.5
-  });
-},4000);
+ if(!gameOver)
+ aliens.push({
+   x:Math.random()*canvas.width,
+   y:-60,
+   w:60,h:26,
+   vy:2,
+   state:"in", // in → stop → out
+   timer:0
+ });
+},4500);
 
-/* 🔄 OYUN */
+/* 🔄 Oyun döngüsü */
 function loop(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+ ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  /* ARKA PLAN */
-  let g=ctx.createRadialGradient(
-    canvas.width/2,canvas.height,
-    50,canvas.width/2,canvas.height,canvas.height
-  );
-  g.addColorStop(0,"#0a1233");
-  g.addColorStop(1,"#000");
-  ctx.fillStyle=g;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+ /* Arka plan */
+ let g=ctx.createLinearGradient(0,0,0,canvas.height);
+ g.addColorStop(0,"#050a20");
+ g.addColorStop(1,"#000");
+ ctx.fillStyle=g;
+ ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  /* YILDIZLI GÖKYÜZÜ */
-  bgStars.forEach(s=>{
-    s.a+=s.s;
-    ctx.fillStyle=`rgba(255,255,255,${0.3+Math.sin(s.a)*0.7})`;
-    ctx.beginPath();
-    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fill();
-  });
-
-  /* ⭐ YILDIZLAR */
-  for(let i=stars.length-1;i>=0;i--){
-    const st=stars[i];
-    st.y+=st.v;
-    ctx.fillStyle="rgba(255,255,210,0.95)";
-    ctx.beginPath();
-    ctx.arc(st.x,st.y,st.r,0,Math.PI*2);
-    ctx.fill();
-
-    if(Math.hypot(st.x-player.x,st.y-player.y)<st.r+player.r){
-      stars.splice(i,1);
-      score++;
-      document.getElementById("ui").innerText="⭐ "+score;
-    } else if(st.y>canvas.height+50){
-      stars.splice(i,1);
-    }
-  }
-
-  /* ☄️ METEOR */
-  for(let i=meteors.length-1;i>=0;i--){
-    const m=meteors[i];
-    m.y+=m.v;
-    ctx.fillStyle="#888";
-    ctx.beginPath();
-    ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
-    ctx.fill();
-
-    if(Math.hypot(m.x-player.x,m.y-player.y)<m.r+player.r){
-      gameOver=true;
-    } else if(m.y>canvas.height+60){
-      meteors.splice(i,1);
-    }
-  }
-
-  /* 👾 UZAYLI */
-  for(let i=aliens.length-1;i>=0;i--){
-    const a=aliens[i];
-    a.x+=a.v;
-
-    ctx.fillStyle="#9ff";
-    ctx.fillRect(a.x,a.y,a.w,a.h);
-
-    /* uzaylı yıldız çalar */
-    for(let j=stars.length-1;j>=0;j--){
-      const st=stars[j];
-      if(st.x>a.x && st.x<a.x+a.w && st.y>a.y && st.y<a.y+a.h){
-        stars.splice(j,1);
-      }
-    }
-
-    if(a.x>canvas.width+80){
-      aliens.splice(i,1);
-    }
-  }
-
-  /* 🌙 HALKA */
-  ctx.strokeStyle="rgba(180,220,255,0.9)";
-  ctx.lineWidth=4;
+ bg.forEach(s=>{
+  s.a+=0.02;
+  ctx.fillStyle=`rgba(255,255,255,${0.4+Math.sin(s.a)*0.6})`;
   ctx.beginPath();
-  ctx.arc(player.x,player.y,player.r,0,Math.PI*2);
+  ctx.arc(s.x,s.y,s.r,0,6.28);
+  ctx.fill();
+ });
+
+ /* ⭐ Yıldızlar */
+ for(let i=stars.length-1;i>=0;i--){
+  let s=stars[i];
+  s.y+=s.v;
+  ctx.fillStyle="#fff6c8";
+  ctx.beginPath();
+  ctx.arc(s.x,s.y,s.r,0,6.28);
+  ctx.fill();
+
+  if(Math.hypot(s.x-player.x,s.y-player.y)<s.r+player.r){
+    stars.splice(i,1);
+    score++;
+    ui.innerText="⭐ "+score;
+  }
+ }
+
+ /* ☄️ Meteor */
+ for(let i=meteors.length-1;i>=0;i--){
+  let m=meteors[i];
+  m.y+=m.v;
+  ctx.fillStyle="#888";
+  ctx.beginPath();
+  ctx.arc(m.x,m.y,m.r,0,6.28);
+  ctx.fill();
+  if(Math.hypot(m.x-player.x,m.y-player.y)<m.r+player.r){
+    gameOver=true;
+  }
+ }
+
+ /* 👾 Uzaylı */
+ aliens.forEach(a=>{
+  if(a.state==="in"){
+    a.y+=a.vy;
+    if(a.y>120){ a.state="stop"; a.timer=0; }
+  }else if(a.state==="stop"){
+    a.timer++;
+    if(a.timer%50===0){
+      bullets.push({x:a.x+a.w/2,y:a.y+a.h,v:5});
+    }
+    if(a.timer>180){ a.state="out"; }
+  }else{
+    a.y-=2;
+  }
+
+  ctx.fillStyle="#9ff";
+  ctx.fillRect(a.x,a.y,a.w,a.h);
+ });
+
+ /* 🔫 Ateşler */
+ for(let i=bullets.length-1;i>=0;i--){
+  let b=bullets[i];
+  b.y+=b.v;
+  ctx.strokeStyle="red";
+  ctx.beginPath();
+  ctx.moveTo(b.x,b.y);
+  ctx.lineTo(b.x,b.y+12);
   ctx.stroke();
 
-  if(!gameOver) requestAnimationFrame(loop);
-}
+  if(Math.hypot(b.x-player.x,b.y-player.y)<player.r){
+    gameOver=true;
+  }
+ }
 
+ /* Oyuncu */
+ ctx.strokeStyle="#bdf";
+ ctx.lineWidth=4;
+ ctx.beginPath();
+ ctx.arc(player.x,player.y,player.r,0,6.28);
+ ctx.stroke();
+
+ if(!gameOver){
+  requestAnimationFrame(loop);
+ }else{
+  ctx.fillStyle="white";
+  ctx.font="28px Arial";
+  ctx.fillText("Oyun Bitti",canvas.width/2-70,canvas.height/2);
+ }
+}
 loop();
 </script>
 </body>
