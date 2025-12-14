@@ -8,96 +8,98 @@
 <style>
 html,body{
   margin:0;padding:0;width:100%;height:100%;
-  overflow:hidden;touch-action:none;
+  overflow:hidden;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
   background:radial-gradient(circle at top,#2b0b4f,#05010a);
+  touch-action:none;
 }
 body::before{
-  content:"";position:fixed;inset:0;
+  content:"";
+  position:fixed;inset:0;
   background-image:
     radial-gradient(1px 1px at 20% 30%,#fff,transparent),
     radial-gradient(1px 1px at 70% 60%,#fff,transparent),
     radial-gradient(1px 1px at 40% 80%,#fff,transparent);
-  opacity:.18;pointer-events:none;
+  opacity:.18;
 }
-#hud{position:fixed;top:14px;left:14px;color:white;font-size:18px;z-index:20}
-#lives{margin-left:6px}
 
+#hud{
+  position:fixed;top:14px;left:14px;
+  color:white;font-size:18px;z-index:20;
+}
 #panel{
-  position:fixed;bottom:80px;left:50%;
+  position:fixed;
+  bottom:80px;
+  left:50%;
   transform:translateX(-50%);
-  width:60px;height:14px;border-radius:20px;
+  width:60px;height:14px;
+  border-radius:20px;
   background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
   box-shadow:0 0 30px rgba(255,80,180,.9);
   z-index:15;
 }
-
 #letterBoxes{
-  position:fixed;bottom:20px;left:10px;
-  display:flex;gap:6px;z-index:16;
+  position:fixed;
+  bottom:20px;left:10px;
+  display:flex;gap:6px;
 }
 .box{
-  width:28px;height:28px;border-radius:6px;
+  width:28px;height:28px;
+  border-radius:6px;
   background:rgba(255,255,255,.12);
-  backdrop-filter:blur(6px);
   border:1px solid rgba(255,255,255,.5);
-  box-shadow:inset 0 0 8px rgba(255,255,255,.4);
-  color:white;font-weight:bold;
+  color:white;
   display:flex;align-items:center;justify-content:center;
+  font-weight:bold;
 }
+.box.filled{background:rgba(255,255,255,.25)}
+.item{position:absolute;top:-80px}
 
-.item{position:absolute;top:-80px;pointer-events:none}
 .star{
   width:18px;height:18px;
   background:radial-gradient(circle,#ffe58a,#ffb300);
   clip-path:polygon(
-    50% 0%,61% 35%,98% 35%,
-    68% 57%,79% 91%,50% 70%,
-    21% 91%,32% 57%,2% 35%,39% 35%);
+    50% 0%,61% 35%,98% 35%,68% 57%,
+    79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%
+  );
   box-shadow:0 0 12px gold;
 }
 .heart{
-  width:22px;height:22px;background:#ff4d6d;
+  width:22px;height:22px;
+  background:#ff4d6d;
   transform:rotate(-45deg);
   border-radius:50% 50% 0 0;
 }
 .heart::before,.heart::after{
-  content:"";position:absolute;
-  width:22px;height:22px;background:#ff4d6d;border-radius:50%;
+  content:"";
+  position:absolute;width:22px;height:22px;
+  background:#ff4d6d;border-radius:50%;
 }
 .heart::before{top:-11px}
 .heart::after{left:11px}
+
 .meteor{
-  width:18px;height:18px;border-radius:50%;
-  background:radial-gradient(circle,#9e9e9e,#424242);
-  box-shadow:0 0 18px rgba(200,200,200,.6);
+  width:16px;height:16px;border-radius:50%;
+  background:radial-gradient(circle,#ffb74d,#e65100);
+  box-shadow:0 0 28px rgba(255,140,0,.9);
 }
 .meteor::after{
-  content:"";position:absolute;
-  top:-60px;left:50%;transform:translateX(-50%);
-  width:6px;height:60px;
-  background:linear-gradient(to top,rgba(255,180,80,.8),transparent);
+  content:"";position:absolute;top:-50px;left:50%;
+  transform:translateX(-50%);
+  width:6px;height:50px;
+  background:linear-gradient(to top,rgba(255,140,0,.8),transparent);
 }
 .letter{
-  font-size:22px;font-weight:bold;
-  color:#ffe066;text-shadow:0 0 14px gold;
-}
-
-.explosion{
-  position:fixed;width:120px;height:120px;
-  background:radial-gradient(circle,rgba(255,220,120,.9),transparent 70%);
-  animation:boom 1.5s ease-out forwards;
-  pointer-events:none;
-}
-@keyframes boom{
-  from{transform:scale(.2);opacity:1}
-  to{transform:scale(1.6);opacity:0}
+  font-size:20px;font-weight:bold;
+  color:#ffe066;
+  text-shadow:0 0 12px #ffd700;
 }
 
 #over{
   display:none;position:fixed;inset:0;
   background:rgba(0,0,0,.75);
-  color:white;font-size:32px;z-index:30;
+  color:white;font-size:32px;
+  z-index:30;
   align-items:center;justify-content:center;
   flex-direction:column;
 }
@@ -111,11 +113,7 @@ body::before{
 
 <body>
 
-<div id="hud">
-  Skor: <span id="score">0</span>
-  <span id="lives">❤️❤️❤️</span>
-</div>
-
+<div id="hud">Skor: <span id="score">0</span> ❤️❤️❤️</div>
 <div id="letterBoxes"></div>
 <div id="panel"></div>
 
@@ -125,23 +123,24 @@ body::before{
 </div>
 
 <script>
-let score=0,lives=3,running=true,difficulty=1;
+let score=0,lives=3,running=true;
+let speedMultiplier=1;
 
 const letters=["Y","I","L","D","I","Z"];
-const requiredCount={Y:1,I:2,L:1,D:1,Z:1};
-const collectedCount={Y:0,I:0,L:0,D:0,Z:0};
-const active=new Set(),items=[];
+const filled=[];
+const active=new Set();
+const items=[];
 
 const panel=document.getElementById("panel");
 const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
 const over=document.getElementById("over");
 const endText=document.getElementById("endText");
 const boxes=document.getElementById("letterBoxes");
 
 letters.forEach(l=>{
   const b=document.createElement("div");
-  b.className="box";b.dataset.letter=l;
+  b.className="box";
+  b.dataset.letter=l;
   boxes.appendChild(b);
 });
 
@@ -149,7 +148,7 @@ let dragging=false;
 panel.addEventListener("touchstart",()=>dragging=true);
 window.addEventListener("touchend",()=>dragging=false);
 window.addEventListener("touchmove",e=>{
-  if(!dragging) return;
+  if(!dragging)return;
   let x=e.touches[0].clientX-panel.offsetWidth/2;
   x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
   panel.style.left=x+"px";
@@ -158,97 +157,96 @@ window.addEventListener("touchmove",e=>{
 function collide(a,b){
   return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
 }
-function updateLives(){livesEl.textContent="❤️".repeat(lives)}
 
 function spawn(type){
   if(!running) return;
+
   if(type==="letter"){
-    const pool=letters.filter(l=>collectedCount[l]<requiredCount[l] && !active.has(l));
+    const pool=letters.filter(l=>{
+      const count=filled.filter(f=>f===l).length;
+      return count < letters.filter(x=>x===l).length;
+    });
     if(!pool.length) return;
+
     const l=pool[Math.floor(Math.random()*pool.length)];
     active.add(l);
+
     const el=document.createElement("div");
-    el.className="item letter";el.textContent=l;el.letter=l;
-    el.y=-40;el.x=Math.random()*(innerWidth-40);
+    el.className="item letter";
+    el.textContent=l;
+    el.letter=l;
+    el.y=-40;
+    el.x=Math.random()*(innerWidth-40);
     el.style.left=el.x+"px";
     document.body.appendChild(el);
-    items.push({el,type});
+    items.push({el,type,speed:2*speedMultiplier});
     return;
   }
+
   const el=document.createElement("div");
   el.className="item "+type;
-  el.y=-60;el.x=Math.random()*(innerWidth-40);
-  el.speed=(type==="meteor"?3:2)*difficulty;
+  el.y=-60;
+  el.x=Math.random()*(innerWidth-40);
   el.style.left=el.x+"px";
+  el.speed=(type==="meteor"?3:2)*speedMultiplier;
   document.body.appendChild(el);
-  items.push({el,type});
-}
-
-function winExplosion(){
-  ["top","bottom","left","right"].forEach(side=>{
-    const e=document.createElement("div");
-    e.className="explosion";
-    if(side==="top"){e.style.top="0";e.style.left="50%"}
-    if(side==="bottom"){e.style.bottom="0";e.style.left="50%"}
-    if(side==="left"){e.style.left="0";e.style.top="50%"}
-    if(side==="right"){e.style.right="0";e.style.top="50%"}
-    document.body.appendChild(e);
-    setTimeout(()=>e.remove(),1500);
-  });
+  items.push({el,type,speed:el.speed});
 }
 
 function loop(){
   if(!running) return;
   const pRect=panel.getBoundingClientRect();
+
   for(let i=items.length-1;i>=0;i--){
     const o=items[i];
-    o.el.y+=o.el.speed||2;
+    o.el.y+=o.speed;
     o.el.style.top=o.el.y+"px";
     const r=o.el.getBoundingClientRect();
 
     if(collide(r,pRect)){
       if(o.type==="star") score+=10;
-      if(o.type==="heart"&&lives<3) lives++;
       if(o.type==="meteor") lives--;
       if(o.type==="letter"){
-        collectedCount[o.el.letter]++;
-        active.delete(o.el.letter);
-        document.querySelector(`[data-letter="${o.el.letter}"]`).textContent=o.el.letter;
-
-        const done=Object.keys(requiredCount).every(
-          l=>collectedCount[l]>=requiredCount[l]
-        );
-        if(done){
-          running=false;
-          winExplosion();
-          setTimeout(()=>{
-            endText.textContent="Kazandın ✨";
-            over.style.display="flex";
-          },1500);
+        filled.push(o.el.letter);
+        const emptyBox=[...document.querySelectorAll(`[data-letter="${o.el.letter}"]`)]
+          .find(b=>b.textContent==="");
+        if(emptyBox){
+          emptyBox.textContent=o.el.letter;
+          emptyBox.classList.add("filled");
         }
       }
+
       scoreEl.textContent=score;
-      updateLives();
-      o.el.remove();items.splice(i,1);
+      o.el.remove();
+      items.splice(i,1);
+
+      if(filled.length===letters.length){
+        running=false;
+        panel.style.display="none";
+        endText.textContent="Kazandın ✨";
+        over.style.display="flex";
+      }
+
       if(lives<=0){
         running=false;
-        endText.textContent="Kaybettin";
+        endText.textContent="Kaybettin 💔";
         over.style.display="flex";
       }
     }
-    if(o.el.y>innerHeight+60){
-      if(o.type==="letter") active.delete(o.el.letter);
-      o.el.remove();items.splice(i,1);
+
+    if(o.el.y>innerHeight){
+      o.el.remove();
+      items.splice(i,1);
     }
   }
   requestAnimationFrame(loop);
 }
 
+setInterval(()=>{ speedMultiplier+=0.03 },5000);
 setInterval(()=>spawn("star"),900);
+setInterval(()=>spawn("heart"),5000);
 setInterval(()=>spawn("meteor"),1200);
-setInterval(()=>spawn("heart"),5200);
-setInterval(()=>spawn("letter"),12000);
-setInterval(()=>difficulty+=0.05,6000);
+setInterval(()=>spawn("letter"),1800);
 
 loop();
 </script>
