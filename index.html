@@ -8,266 +8,189 @@
 html,body{
   margin:0;
   padding:0;
-  background:#0b0b1a;
   overflow:hidden;
   font-family:Arial,Helvetica,sans-serif;
+  background:radial-gradient(circle at top, #7a1fa2, #1b0033);
 }
 #game{
   position:relative;
   width:100vw;
   height:100vh;
-  overflow:hidden;
 }
 #panel{
   position:absolute;
-  bottom:20px;
-  width:120px;
-  height:25px;
-  background:#ff4d6d;
-  border-radius:12px;
+  bottom:80px;
+  width:140px;
+  height:26px;
+  left:50%;
+  transform:translateX(-50%);
+  border-radius:20px;
+  background:rgba(255,80,200,0.9);
+  box-shadow:0 0 20px #ff6fd8;
 }
 .item{
   position:absolute;
-  font-size:32px;
   user-select:none;
+  pointer-events:none;
 }
-.meteor{ font-size:34px; }
-.heart{ font-size:30px; }
-.letter{ font-size:34px; }
-
-#lives{
+.star{ color:#ffd966; text-shadow:0 0 10px #ffd966; font-size:28px; }
+.heart{ color:#ff4d6d; text-shadow:0 0 10px #ff4d6d; font-size:28px; }
+.meteor{
+  font-size:34px;
+  filter:drop-shadow(0 0 12px orange);
+}
+#ui{
   position:absolute;
   top:10px;
   left:10px;
-  font-size:26px;
+  color:white;
+  font-size:18px;
 }
-
 #boxes{
   position:absolute;
-  bottom:60px;
+  bottom:20px;
   width:100%;
   display:flex;
   justify-content:center;
-  gap:8px;
+  gap:10px;
 }
 .box{
-  width:50px;
-  height:50px;
-  border:2px dashed #fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-  font-size:28px;
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  border:2px solid rgba(255,255,255,0.3);
 }
-
-#gameOver{
+#over{
   position:absolute;
   inset:0;
-  background:rgba(0,0,0,.8);
+  background:rgba(0,0,0,.75);
   display:none;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
-  color:#fff;
-  z-index:99;
+  flex-direction:column;
+  color:white;
 }
-#gameOver button{
-  padding:12px 25px;
-  font-size:18px;
+#over button{
+  margin-top:15px;
+  padding:10px 22px;
   border:none;
-  border-radius:10px;
+  border-radius:14px;
   background:#ff4d6d;
-  color:#fff;
-  cursor:pointer;
+  color:white;
+  font-size:18px;
 }
 </style>
 </head>
 <body>
 
 <div id="game">
-  <div id="lives">❤️❤️❤️</div>
+  <div id="ui">Skor: <span id="score">0</span> <span id="lives">❤️❤️❤️</span></div>
   <div id="panel"></div>
-
-  <div id="boxes"></div>
-
-  <div id="gameOver">
+  <div id="boxes">
+    <div class="box"></div><div class="box"></div><div class="box"></div>
+    <div class="box"></div><div class="box"></div><div class="box"></div>
+  </div>
+  <div id="over">
     <h1>Oyun Bitti</h1>
-    <button onclick="restart()">Tekrar Oyna</button>
+    <button onclick="location.reload()">Tekrar Oyna</button>
   </div>
 </div>
 
 <script>
-const game = document.getElementById("game");
-const panel = document.getElementById("panel");
-const livesUI = document.getElementById("lives");
-const boxesDiv = document.getElementById("boxes");
-const gameOverDiv = document.getElementById("gameOver");
+const game=document.getElementById("game");
+const panel=document.getElementById("panel");
+const scoreUI=document.getElementById("score");
+const livesUI=document.getElementById("lives");
+const over=document.getElementById("over");
 
-let lives = 3;
-let panelX = innerWidth/2 - 60;
-let items = [];
-let letters = ["⭐","⭐","⭐","⭐","⭐","⭐"];
-let letterActive = {};
-let filledBoxes = {};
-let running = true;
+let panelX=innerWidth/2-70;
+let score=0;
+let lives=3;
+let items=[];
+let running=true;
 
-panel.style.left = panelX+"px";
-
-/* KUTULAR */
-letters.forEach(l=>{
-  filledBoxes[l]=false;
-  const b=document.createElement("div");
-  b.className="box";
-  b.dataset.letter=l;
-  boxesDiv.appendChild(b);
-});
+panel.style.left=panelX+"px";
 
 /* PANEL KONTROL */
-let dragging=false;
-addEventListener("pointerdown",()=>dragging=true);
-addEventListener("pointerup",()=>dragging=false);
+let hold=false;
+addEventListener("pointerdown",()=>hold=true);
+addEventListener("pointerup",()=>hold=false);
 addEventListener("pointermove",e=>{
-  if(!dragging) return;
-  panelX = e.clientX - panel.offsetWidth/2;
-  panelX = Math.max(0, Math.min(innerWidth-panel.offsetWidth,panelX));
-  panel.style.left = panelX+"px";
+  if(!hold) return;
+  panelX=e.clientX-panel.offsetWidth/2;
+  panelX=Math.max(0,Math.min(innerWidth-panel.offsetWidth,panelX));
+  panel.style.left=panelX+"px";
 });
 
-/* METEOR */
-function spawnMeteor(){
-  const m=document.createElement("div");
-  m.className="item meteor";
-  m.textContent="☄️";
-  m.x=Math.random()*(innerWidth-40);
-  m.y=-40;
-  m.vy=2+Math.random()*2;
-  m.vr=Math.random()*4-2;
-  m.r=0;
-  game.appendChild(m);
-  items.push(m);
+/* SPAWN */
+function spawn(type){
+  const d=document.createElement("div");
+  d.className="item "+type;
+  d.x=Math.random()*(innerWidth-40);
+  d.y=-40;
+  d.vy= type==="meteor" ? 3 : 2.2;
+  d.textContent= type==="star"?"⭐": type==="heart"?"❤️":"☄️";
+  game.appendChild(d);
+  items.push(d);
 }
 
-/* KALP */
-function spawnHeart(){
-  if(Math.random()>0.005) return;
-  const h=document.createElement("div");
-  h.className="item heart";
-  h.textContent="❤️";
-  h.x=Math.random()*(innerWidth-30);
-  h.y=-30;
-  h.vy=2;
-  game.appendChild(h);
-  items.push(h);
-}
-
-/* HARF */
-function spawnLetter(){
-  const available = letters.filter(l=>!letterActive[l] && !filledBoxes[l]);
-  if(!available.length) return;
-  if(Math.random()>0.01) return;
-
-  const ltr = available[Math.floor(Math.random()*available.length)];
-  letterActive[ltr]=true;
-
-  const l=document.createElement("div");
-  l.className="item letter";
-  l.textContent=ltr;
-  l.letter=ltr;
-  l.x=Math.random()*(innerWidth-30);
-  l.y=-30;
-  l.vy=2;
-  game.appendChild(l);
-  items.push(l);
-}
+for(let i=0;i<6;i++) spawn("meteor");
 
 /* ÇARPIŞMA */
 function hit(a,b){
-  return a.x < b.x + b.offsetWidth &&
-         a.x + a.offsetWidth > b.x &&
-         a.y < b.y + b.offsetHeight &&
-         a.y + a.offsetHeight > b.y;
+  return a.x<b.offsetLeft+b.offsetWidth &&
+         a.x+30>b.offsetLeft &&
+         a.y<b.offsetTop+b.offsetHeight &&
+         a.y+30>b.offsetTop;
 }
 
-/* OYUN DÖNGÜ */
+/* DÖNGÜ */
 function loop(){
   if(!running) return;
 
-  spawnHeart();
-  spawnLetter();
+  if(Math.random()<0.04) spawn("star");
+  if(Math.random()<0.005) spawn("heart");
 
   items.forEach((it,i)=>{
-    it.y += it.vy || 2;
-    it.style.top=it.y+"px";
+    it.y+=it.vy;
     it.style.left=it.x+"px";
+    it.style.top=it.y+"px";
 
-    if(it.classList.contains("meteor")){
-      it.r += it.vr;
-      it.style.transform=`rotate(${it.r}deg)`;
-      if(hit(it,panel)){
-        lives--;
-        updateLives();
-        it.remove();
-        items.splice(i,1);
-        spawnMeteor();
-        if(lives<=0) endGame();
+    if(hit(it,panel)){
+      if(it.classList.contains("star")){
+        score++;
+        scoreUI.textContent=score;
       }
-      if(it.y>innerHeight){ it.remove(); items.splice(i,1); spawnMeteor(); }
-    }
-
-    if(it.classList.contains("heart")){
-      if(hit(it,panel)){
+      if(it.classList.contains("heart")){
         lives=Math.min(3,lives+1);
-        updateLives();
-        it.remove(); items.splice(i,1);
       }
-      if(it.y>innerHeight){ it.remove(); items.splice(i,1); }
+      if(it.classList.contains("meteor")){
+        lives--;
+        spawn("meteor");
+      }
+      updateLives();
+      it.remove(); items.splice(i,1);
+      if(lives<=0) end();
     }
 
-    if(it.classList.contains("letter")){
-      if(hit(it,panel)){
-        fillBox(it.letter);
-        letterActive[it.letter]=false;
-        it.remove(); items.splice(i,1);
-      }
-      if(it.y>innerHeight){
-        letterActive[it.letter]=false;
-        it.remove(); items.splice(i,1);
-      }
+    if(it.y>innerHeight){
+      if(it.classList.contains("meteor")) spawn("meteor");
+      it.remove(); items.splice(i,1);
     }
   });
 
   requestAnimationFrame(loop);
 }
 
-/* CAN */
 function updateLives(){
   livesUI.textContent="❤️".repeat(lives);
 }
 
-/* KUTU DOLDUR */
-function fillBox(letter){
-  const box=[...document.querySelectorAll(".box")]
-    .find(b=>b.dataset.letter===letter && b.textContent==="");
-  if(box){
-    box.textContent=letter;
-    filledBoxes[letter]=true;
-  }
-}
-
-/* OYUN BİT */
-function endGame(){
+function end(){
   running=false;
-  gameOverDiv.style.display="flex";
+  over.style.display="flex";
 }
 
-/* YENİDEN */
-function restart(){
-  location.reload();
-}
-
-/* BAŞLAT */
-for(let i=0;i<6;i++) spawnMeteor();
 loop();
 </script>
 </body>
