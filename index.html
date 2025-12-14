@@ -153,7 +153,7 @@ const boxes=document.getElementById("letterBoxes");
 const over=document.getElementById("over");
 const endText=document.getElementById("endText");
 
-/* Kutular Y I L D I Z kilitli */
+/* Kutular */
 letters.forEach(l=>{
   const b=document.createElement("div");
   b.className="box";
@@ -161,7 +161,7 @@ letters.forEach(l=>{
   boxes.appendChild(b);
 });
 
-/* Panel kontrol */
+/* Panel */
 let drag=false;
 panel.addEventListener("touchstart",()=>drag=true);
 window.addEventListener("touchend",()=>drag=false);
@@ -180,9 +180,9 @@ function collide(a,b){return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a
 const storyTexts=[
   "Yıldız gibi parlıyorsun ✨",
   "Kalbim seni seçti 💖",
-  "Her harf sana ait",
-  "Bu bir oyun değil…",
-  "Bu biziz ⭐"
+  "Biraz daha…",
+  "Az kaldı…",
+  "Hazır mısın ⭐"
 ];
 function showStory(){
   story.textContent=storyTexts[(level-1)%storyTexts.length];
@@ -195,7 +195,8 @@ function spawn(type){
   if(!running) return;
 
   if(type==="letter"){
-    const pool=letters.filter(l=>filledCounts[l]<maxCounts[l] && !activeLetters.includes(l));
+    let allowedLetters = level < 4 ? ["Y","I","L"] : letters;
+    const pool=allowedLetters.filter(l=>filledCounts[l]<maxCounts[l] && !activeLetters.includes(l));
     if(!pool.length) return;
     const l=pool[Math.floor(Math.random()*pool.length)];
     activeLetters.push(l);
@@ -252,7 +253,7 @@ function loop(){
         const totalFilled=Object.values(filledCounts).reduce((a,b)=>a+b,0);
         if(totalFilled===6){
           running=false;
-          endText.textContent="YILDIZ ⭐\nKalbim hep sende";
+          endText.textContent="💖 Kalbim hep sende 💖";
           over.style.display="flex";
           return;
         }
@@ -284,20 +285,20 @@ function loop(){
 
 /* Level */
 setInterval(()=>{
-  const newLevel=Math.floor(score/100)+1;
+  const newLevel=Math.floor(score/120)+1;
   if(newLevel!==level){
     level=newLevel;
     levelEl.textContent="Level: "+level;
-    speedFactor+=0.2;
+    speedFactor+=0.15;
     showStory();
   }
 },500);
 
 /* Zamanlayıcılar */
 setInterval(()=>spawn("star"),800);
-setInterval(()=>spawn("meteor"),1200);
-setInterval(()=>spawn("heart"),5000);
-setInterval(()=>spawn("letter"),3000);
+setInterval(()=>spawn("meteor"),1300);
+setInterval(()=>spawn("heart"),5200);
+setInterval(()=>spawn("letter"),5500);
 
 loop();
 </script>
