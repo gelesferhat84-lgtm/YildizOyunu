@@ -1,222 +1,274 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<title>Nebula Bit Game</title>
+<meta charset="UTF-8">
+<title>Yıldız Oyunu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 html,body{
-  margin:0; padding:0;
-  width:100%; height:100%;
+  margin:0;
+  padding:0;
+  background:#0b0b1a;
   overflow:hidden;
-  background: radial-gradient(circle at top, #4b0066, #050014 70%);
-  font-family: Arial, sans-serif;
-  user-select:none;
+  font-family:Arial,Helvetica,sans-serif;
 }
 #game{
   position:relative;
-  width:100%;
-  height:100%;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
 }
-#hud{
-  position:absolute;
-  top:10px; left:10px;
-  background:rgba(0,0,0,.4);
-  color:#fff;
-  padding:8px 12px;
-  border-radius:10px;
-  font-size:16px;
-}
-#hearts{ margin-top:4px; }
-
 #panel{
   position:absolute;
-  bottom:80px;
-  left:50%;
-  transform:translateX(-50%);
+  bottom:20px;
   width:120px;
   height:25px;
-  background:rgba(255,120,180,.35);
-  border:1px solid rgba(255,180,220,.8);
-  border-radius:20px;
-  backdrop-filter: blur(6px);
+  background:#ff4d6d;
+  border-radius:12px;
 }
-
-.letter{
+.item{
   position:absolute;
   font-size:32px;
-  font-weight:bold;
-  color:#ffd800;
-  text-shadow:0 0 15px #ffeb3b;
+  user-select:none;
 }
-.star{
+.meteor{ font-size:34px; }
+.heart{ font-size:30px; }
+.letter{ font-size:34px; }
+
+#lives{
   position:absolute;
-  font-size:28px;
-}
-.meteor{
-  position:absolute;
-  width:40px;
-  height:40px;
-  background:radial-gradient(circle,#777,#333);
-  border-radius:50%;
-}
-.meteor::before{
-  content:'';
-  position:absolute;
-  top:-25px; left:50%;
-  transform:translateX(-50%);
-  width:8px; height:30px;
-  background:linear-gradient(#ff9800, transparent);
+  top:10px;
+  left:10px;
+  font-size:26px;
 }
 
-.alien{
+#boxes{
   position:absolute;
-  width:50px; height:30px;
-  background:rgba(180,255,255,.35);
-  border:1px solid rgba(200,255,255,.8);
-  border-radius:50% 50% 40% 40%;
-}
-
-.bullet{
-  position:absolute;
-  width:14px; height:14px;
-  background:#ff5555;
-  border-radius:50%;
-}
-
-.boxes{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
+  bottom:60px;
+  width:100%;
   display:flex;
-  gap:10px;
+  justify-content:center;
+  gap:8px;
 }
 .box{
-  width:45px; height:45px;
-  background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.6);
-  border-radius:8px;
-  color:#ffd800;
-  font-size:22px;
+  width:50px;
+  height:50px;
+  border:2px dashed #fff;
   display:flex;
   align-items:center;
   justify-content:center;
+  color:#fff;
+  font-size:28px;
 }
 
-#gameover{
+#gameOver{
   position:absolute;
   inset:0;
+  background:rgba(0,0,0,.8);
   display:none;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  background:rgba(0,0,0,.7);
   color:#fff;
-  flex-direction:column;
+  z-index:99;
 }
-button{
-  padding:10px 20px;
-  margin-top:10px;
+#gameOver button{
+  padding:12px 25px;
   font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#ff4d6d;
+  color:#fff;
+  cursor:pointer;
 }
 </style>
 </head>
 <body>
-<div id="game">
-  <div id="hud">
-    Skor: <span id="score">0</span>
-    <div id="hearts">❤️❤️❤️</div>
-  </div>
 
+<div id="game">
+  <div id="lives">❤️❤️❤️</div>
   <div id="panel"></div>
 
-  <div class="boxes" id="boxes"></div>
+  <div id="boxes"></div>
 
-  <div id="gameover">
+  <div id="gameOver">
     <h1>Oyun Bitti</h1>
-    <button onclick="location.reload()">Tekrar Oyna</button>
+    <button onclick="restart()">Tekrar Oyna</button>
   </div>
 </div>
 
 <script>
-const game=document.getElementById("game");
-const panel=document.getElementById("panel");
-const boxesEl=document.getElementById("boxes");
-const scoreEl=document.getElementById("score");
-const heartsEl=document.getElementById("hearts");
-const gameover=document.getElementById("gameover");
+const game = document.getElementById("game");
+const panel = document.getElementById("panel");
+const livesUI = document.getElementById("lives");
+const boxesDiv = document.getElementById("boxes");
+const gameOverDiv = document.getElementById("gameOver");
 
-let score=0, lives=3;
-let letters=["Y","I","L","D","I","Z"];
-let collected={};
+let lives = 3;
+let panelX = innerWidth/2 - 60;
+let items = [];
+let letters = ["⭐","⭐","⭐","⭐","⭐","⭐"];
+let letterActive = {};
+let filledBoxes = {};
+let running = true;
 
+panel.style.left = panelX+"px";
+
+/* KUTULAR */
 letters.forEach(l=>{
+  filledBoxes[l]=false;
   const b=document.createElement("div");
   b.className="box";
   b.dataset.letter=l;
-  boxesEl.appendChild(b);
+  boxesDiv.appendChild(b);
 });
 
+/* PANEL KONTROL */
 let dragging=false;
-panel.onmousedown=()=>dragging=true;
-window.onmouseup=()=>dragging=false;
-window.onmousemove=e=>{
-  if(dragging){
-    panel.style.left=e.clientX+"px";
-  }
-};
+addEventListener("pointerdown",()=>dragging=true);
+addEventListener("pointerup",()=>dragging=false);
+addEventListener("pointermove",e=>{
+  if(!dragging) return;
+  panelX = e.clientX - panel.offsetWidth/2;
+  panelX = Math.max(0, Math.min(innerWidth-panel.offsetWidth,panelX));
+  panel.style.left = panelX+"px";
+});
 
-function dropLetter(){
-  if(letters.length===0) return;
-  const l=letters[Math.floor(Math.random()*letters.length)];
-  const el=document.createElement("div");
-  el.className="letter";
-  el.textContent=l;
-  el.style.left=Math.random()*90+"%";
-  el.style.top="-40px";
-  game.appendChild(el);
-  let y=0;
-  const iv=setInterval(()=>{
-    y+=2;
-    el.style.top=y+"px";
-    const p=panel.getBoundingClientRect();
-    const r=el.getBoundingClientRect();
-    if(r.bottom>p.top && r.left<p.right && r.right>p.left){
-      document.querySelectorAll(".box").forEach(b=>{
-        if(b.dataset.letter===l && b.textContent===""){
-          b.textContent=l;
-          letters=letters.filter(x=>x!==l);
-        }
-      });
-      el.remove(); clearInterval(iv);
-    }
-    if(y>window.innerHeight){ el.remove(); clearInterval(iv);}
-  },16);
-}
-
-function dropMeteor(){
+/* METEOR */
+function spawnMeteor(){
   const m=document.createElement("div");
-  m.className="meteor";
-  m.style.left=Math.random()*90+"%";
-  m.style.top="-60px";
+  m.className="item meteor";
+  m.textContent="☄️";
+  m.x=Math.random()*(innerWidth-40);
+  m.y=-40;
+  m.vy=2+Math.random()*2;
+  m.vr=Math.random()*4-2;
+  m.r=0;
   game.appendChild(m);
-  let y=0;
-  const iv=setInterval(()=>{
-    y+=4;
-    m.style.top=y+"px";
-    const p=panel.getBoundingClientRect();
-    const r=m.getBoundingClientRect();
-    if(r.bottom>p.top && r.left<p.right && r.right>p.left){
-      lives--;
-      heartsEl.textContent="❤️".repeat(lives);
-      m.remove(); clearInterval(iv);
-      if(lives<=0) gameover.style.display="flex";
-    }
-    if(y>window.innerHeight){ m.remove(); clearInterval(iv);}
-  },16);
+  items.push(m);
 }
 
-setInterval(dropLetter,2500);
-setInterval(dropMeteor,1800);
+/* KALP */
+function spawnHeart(){
+  if(Math.random()>0.005) return;
+  const h=document.createElement("div");
+  h.className="item heart";
+  h.textContent="❤️";
+  h.x=Math.random()*(innerWidth-30);
+  h.y=-30;
+  h.vy=2;
+  game.appendChild(h);
+  items.push(h);
+}
+
+/* HARF */
+function spawnLetter(){
+  const available = letters.filter(l=>!letterActive[l] && !filledBoxes[l]);
+  if(!available.length) return;
+  if(Math.random()>0.01) return;
+
+  const ltr = available[Math.floor(Math.random()*available.length)];
+  letterActive[ltr]=true;
+
+  const l=document.createElement("div");
+  l.className="item letter";
+  l.textContent=ltr;
+  l.letter=ltr;
+  l.x=Math.random()*(innerWidth-30);
+  l.y=-30;
+  l.vy=2;
+  game.appendChild(l);
+  items.push(l);
+}
+
+/* ÇARPIŞMA */
+function hit(a,b){
+  return a.x < b.x + b.offsetWidth &&
+         a.x + a.offsetWidth > b.x &&
+         a.y < b.y + b.offsetHeight &&
+         a.y + a.offsetHeight > b.y;
+}
+
+/* OYUN DÖNGÜ */
+function loop(){
+  if(!running) return;
+
+  spawnHeart();
+  spawnLetter();
+
+  items.forEach((it,i)=>{
+    it.y += it.vy || 2;
+    it.style.top=it.y+"px";
+    it.style.left=it.x+"px";
+
+    if(it.classList.contains("meteor")){
+      it.r += it.vr;
+      it.style.transform=`rotate(${it.r}deg)`;
+      if(hit(it,panel)){
+        lives--;
+        updateLives();
+        it.remove();
+        items.splice(i,1);
+        spawnMeteor();
+        if(lives<=0) endGame();
+      }
+      if(it.y>innerHeight){ it.remove(); items.splice(i,1); spawnMeteor(); }
+    }
+
+    if(it.classList.contains("heart")){
+      if(hit(it,panel)){
+        lives=Math.min(3,lives+1);
+        updateLives();
+        it.remove(); items.splice(i,1);
+      }
+      if(it.y>innerHeight){ it.remove(); items.splice(i,1); }
+    }
+
+    if(it.classList.contains("letter")){
+      if(hit(it,panel)){
+        fillBox(it.letter);
+        letterActive[it.letter]=false;
+        it.remove(); items.splice(i,1);
+      }
+      if(it.y>innerHeight){
+        letterActive[it.letter]=false;
+        it.remove(); items.splice(i,1);
+      }
+    }
+  });
+
+  requestAnimationFrame(loop);
+}
+
+/* CAN */
+function updateLives(){
+  livesUI.textContent="❤️".repeat(lives);
+}
+
+/* KUTU DOLDUR */
+function fillBox(letter){
+  const box=[...document.querySelectorAll(".box")]
+    .find(b=>b.dataset.letter===letter && b.textContent==="");
+  if(box){
+    box.textContent=letter;
+    filledBoxes[letter]=true;
+  }
+}
+
+/* OYUN BİT */
+function endGame(){
+  running=false;
+  gameOverDiv.style.display="flex";
+}
+
+/* YENİDEN */
+function restart(){
+  location.reload();
+}
+
+/* BAŞLAT */
+for(let i=0;i<6;i++) spawnMeteor();
+loop();
 </script>
 </body>
 </html>
