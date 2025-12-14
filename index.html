@@ -23,11 +23,11 @@ body::before{
 
 /* HUD */
 #hud{
-  position:fixed;top:14px;left:14px;color:white;
-  font-size:18px;z-index:20;
+  position:fixed;top:14px;left:14px;
+  color:white;font-size:18px;z-index:20;
 }
-#lives{margin-left:6px}
 #level{font-size:14px;margin-top:4px}
+#lives{margin-left:6px}
 
 /* Hikâye */
 #storyLine{
@@ -95,25 +95,17 @@ body::before{
   color:#ffd54f;text-shadow:0 0 14px gold;
 }
 
-/* Final Overlay */
-.final-overlay{
+/* Final */
+#finalOverlay{
   position:fixed;inset:0;
   background:radial-gradient(circle,#14001f,#000);
-  display:flex;align-items:center;justify-content:center;
-  z-index:999;
+  display:none;align-items:center;justify-content:center;
+  z-index:999;color:white;text-align:center;
 }
-.final-content{text-align:center;color:white}
-.final-content button{
-  padding:12px 22px;margin:6px;
+#finalOverlay button{
+  padding:12px 22px;margin-top:14px;
   border:none;border-radius:20px;
   background:#ff4d6d;color:white;
-}
-.heart-rain{
-  position:fixed;top:-30px;font-size:22px;
-  animation:fall 3s linear;
-}
-@keyframes fall{
-  to{transform:translateY(110vh);opacity:0}
 }
 </style>
 </head>
@@ -130,8 +122,8 @@ body::before{
 <div id="letterBoxes"></div>
 <div id="panel"></div>
 
-<div id="finalOverlay" class="final-overlay" style="display:none">
-  <div class="final-content">
+<div id="finalOverlay">
+  <div>
     <h1>⭐ YILDIZ ⭐</h1>
     <p>Seni her yerde topladım…<br>Kalbimde 💖</p>
     <button onclick="location.reload()">Tekrar Oyna</button>
@@ -139,13 +131,15 @@ body::before{
 </div>
 
 <script>
-let score=0,lives=3,running=true,speedFactor=1,level=1;
+let score=0,lives=3,level=1,running=true,speedFactor=1;
 const letters=["Y","I","L","D","I","Z"];
 const filled=[],active=[],items=[];
-const scoreEl=scoreSpan=score=document.getElementById("score");
+
+const scoreEl=document.getElementById("score");
 const livesEl=document.getElementById("lives");
 const levelEl=document.getElementById("level");
 const panel=document.getElementById("panel");
+const finalOverlay=document.getElementById("finalOverlay");
 
 letters.forEach(l=>{
   const b=document.createElement("div");
@@ -182,12 +176,12 @@ function showStory(){
   setTimeout(()=>el.classList.remove("show"),2000);
 }
 
-function levelCheck(){
+function checkLevel(){
   const nl=Math.floor(score/20)+1;
   if(nl!==level){
     level=nl;
     levelEl.textContent="Level: "+level;
-    speedFactor+=0.2;
+    speedFactor+=0.15;
     showStory();
   }
 }
@@ -197,6 +191,7 @@ function spawn(type){
   const el=document.createElement("div");
   el.className="item "+type;
   el.y=-60;el.x=Math.random()*(innerWidth-40);
+  el.speed=(type==="meteor"?3:2);
   el.style.left=el.x+"px";
   document.body.appendChild(el);
   items.push({el,type});
@@ -207,19 +202,24 @@ function loop(){
   const p=panel.getBoundingClientRect();
   for(let i=items.length-1;i>=0;i--){
     const o=items[i];
-    o.el.y+=(o.el.speed||2)*speedFactor;
+    o.el.y+=o.el.speed*speedFactor;
     o.el.style.top=o.el.y+"px";
     if(collide(o.el.getBoundingClientRect(),p)){
       if(o.type==="star")score+=10;
+      if(o.type==="meteor")lives--;
       scoreEl.textContent=score;
-      levelCheck();
+      updateLives();
+      checkLevel();
       o.el.remove();items.splice(i,1);
+      if(lives<=0){running=false;return;}
     }
+    if(o.el.y>innerHeight){o.el.remove();items.splice(i,1);}
   }
   requestAnimationFrame(loop);
 }
 
 setInterval(()=>spawn("star"),900);
+setInterval(()=>spawn("meteor"),1500);
 loop();
 </script>
 
