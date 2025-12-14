@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>YILDIZ</title>
+<title>YILDIZ Ultimate</title>
 
 <style>
+/* ==== GENEL ==== */
 html,body{
   margin:0;padding:0;width:100%;height:100%;
   overflow:hidden;
@@ -14,8 +15,7 @@ html,body{
   touch-action:none;
 }
 body::before{
-  content:"";
-  position:fixed;inset:0;
+  content:"";position:fixed;inset:0;
   background-image:
     radial-gradient(1px 1px at 20% 30%,#fff,transparent),
     radial-gradient(1px 1px at 70% 60%,#fff,transparent),
@@ -23,104 +23,111 @@ body::before{
   opacity:.18;pointer-events:none;
 }
 
-/* HUD */
+/* ==== HUD ==== */
 #hud{
   position:fixed;top:14px;left:14px;
   color:white;font-size:18px;z-index:20;
 }
-#level{display:block;font-size:14px;opacity:.8}
-
-/* Hikâye */
-#storyLine{
-  position:fixed;top:60px;left:50%;
-  transform:translateX(-50%);
-  color:#ffd1e8;font-size:18px;
-  text-shadow:0 0 12px rgba(255,150,200,.8);
-  opacity:0;transition:.5s;z-index:25;
+#level,#mission{
+  display:block;font-size:14px;opacity:.85
 }
-#storyLine.show{opacity:1}
 
-/* Panel */
+/* ==== HİKÂYE ==== */
+#story{
+  position:fixed;top:70px;left:50%;
+  transform:translateX(-50%);
+  font-size:18px;color:#ffd1e8;
+  text-shadow:0 0 12px rgba(255,120,200,.8);
+  opacity:0;transition:.6s;z-index:30;
+}
+#story.show{opacity:1}
+
+/* ==== PANEL ==== */
 #panel{
-  position:fixed;bottom:80px;left:50%;
+  position:fixed;bottom:90px;left:50%;
   transform:translateX(-50%);
-  width:60px;height:14px;border-radius:20px;
+  width:70px;height:14px;border-radius:20px;
   background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
-  box-shadow:0 0 30px rgba(255,80,180,.9);
-  z-index:15;
-  transition:.2s;
+  box-shadow:0 0 35px rgba(255,80,180,1);
+  z-index:15;transition:.2s;
 }
-#panel.glow{
-  box-shadow:0 0 50px rgba(255,120,200,1);
-}
+#panel.glow{box-shadow:0 0 55px rgba(255,150,220,1)}
 
-/* Harf Kutuları */
-#letterBoxes{
-  position:fixed;bottom:20px;left:50%;
+/* ==== HARF KUTULARI ==== */
+#boxes{
+  position:fixed;bottom:30px;left:50%;
   transform:translateX(-50%);
-  display:flex;gap:8px;z-index:16;
+  display:flex;gap:10px;z-index:16;
 }
 .box{
-  width:30px;height:30px;border-radius:8px;
+  width:34px;height:34px;border-radius:8px;
   background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.5);
+  border:1px solid rgba(255,255,255,.6);
   color:white;display:flex;
   align-items:center;justify-content:center;
-  font-weight:bold;font-size:15px;
+  font-weight:bold;font-size:16px;
 }
 .box.filled{
-  background:rgba(255,255,255,.3);
+  background:rgba(255,255,255,.35);
   box-shadow:0 0 18px rgba(255,200,220,1);
-  animation:pop .3s ease;
+  animation:pop .35s ease;
 }
 @keyframes pop{
-  0%{transform:scale(.6)}
+  0%{transform:scale(.4)}
   100%{transform:scale(1)}
 }
 
-/* Objeler */
+/* ==== OBJELER ==== */
 .item{position:absolute;top:-80px;pointer-events:none}
 .star{
   width:18px;height:18px;
   background:radial-gradient(circle,#ffe58a,#ffb300);
   clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
-  box-shadow:0 0 14px gold;
+  box-shadow:0 0 16px gold;
 }
 .heart{
   width:22px;height:22px;background:#ff4d6d;
-  transform:rotate(-45deg);
-  border-radius:50% 50% 0 0;
+  transform:rotate(-45deg);border-radius:50% 50% 0 0;
 }
 .heart::before,.heart::after{
   content:"";position:absolute;
-  width:22px;height:22px;background:#ff4d6d;
-  border-radius:50%;
+  width:22px;height:22px;background:#ff4d6d;border-radius:50%;
 }
 .heart::before{top:-11px}
 .heart::after{left:11px}
 .meteor{
-  width:16px;height:16px;border-radius:50%;
-  background:radial-gradient(circle,#9e9e9e,#424242);
+  width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle,#aaa,#333);
+}
+.bomb{
+  width:18px;height:18px;border-radius:50%;
+  background:#000;box-shadow:0 0 18px red;
 }
 .letter{
-  font-size:22px;font-weight:bold;
+  font-size:24px;font-weight:bold;
   color:#ffd54f;text-shadow:0 0 14px gold;
 }
 
-/* Final */
-#over{
+/* ==== FINAL ==== */
+#final{
   display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.85);
-  color:white;z-index:30;
+  background:rgba(0,0,0,.88);
+  color:white;z-index:40;
   align-items:center;justify-content:center;
   flex-direction:column;text-align:center;
 }
-#over h1{
-  font-size:32px;
-  animation:zoom 1.2s ease forwards;
+#final h1{
+  font-size:34px;
+  animation:zoom 1.4s ease forwards;
+}
+#final button{
+  margin-top:20px;padding:12px 28px;
+  border:none;border-radius:18px;
+  background:#ff4d6d;color:white;
+  font-size:18px;
 }
 @keyframes zoom{
-  0%{transform:scale(.3);opacity:0}
+  0%{transform:scale(.2);opacity:0}
   100%{transform:scale(1);opacity:1}
 }
 </style>
@@ -132,80 +139,88 @@ body::before{
   Skor: <span id="score">0</span>
   <span id="lives">❤️❤️❤️</span>
   <span id="level">Level: 1</span>
+  <span id="mission"></span>
 </div>
 
-<div id="storyLine"></div>
-<div id="letterBoxes"></div>
+<div id="story"></div>
+<div id="boxes"></div>
 <div id="panel"></div>
 
-<div id="over">
-  <h1 id="endText"></h1>
+<div id="final">
+  <h1 id="finalText"></h1>
+  <button onclick="restart()">Tekrar Oyna ⭐</button>
 </div>
 
 <script>
+/* ==== DEĞİŞKENLER ==== */
 let score=0,lives=3,level=1,running=true;
-let speedFactor=1;
-
+let speed=1;
 const letters=["Y","I","L","D","I","Z"];
-const filledCounts={Y:0,I:0,L:0,D:0,Z:0};
-const maxCounts={Y:1,I:2,L:1,D:1,Z:1};
-const activeLetters=[],items=[];
+const max={Y:1,I:2,L:1,D:1,Z:1};
+const filled={Y:0,I:0,L:0,D:0,Z:0};
+const active=[],items=[];
 
+/* ==== ELEMENTLER ==== */
 const panel=document.getElementById("panel");
 const scoreEl=document.getElementById("score");
 const livesEl=document.getElementById("lives");
 const levelEl=document.getElementById("level");
-const story=document.getElementById("storyLine");
-const boxes=document.getElementById("letterBoxes");
-const over=document.getElementById("over");
-const endText=document.getElementById("endText");
+const missionEl=document.getElementById("mission");
+const story=document.getElementById("story");
+const boxes=document.getElementById("boxes");
+const final=document.getElementById("final");
+const finalText=document.getElementById("finalText");
 
-/* Kutular */
+/* ==== KUTULAR ==== */
 letters.forEach(l=>{
   const b=document.createElement("div");
-  b.className="box";
-  b.dataset.letter=l;
+  b.className="box";b.dataset.letter=l;
   boxes.appendChild(b);
 });
 
-/* Panel */
+/* ==== PANEL KONTROL ==== */
 let drag=false;
 panel.addEventListener("touchstart",()=>drag=true);
 window.addEventListener("touchend",()=>drag=false);
 window.addEventListener("touchmove",e=>{
-  if(!drag) return;
+  if(!drag)return;
   let x=e.touches[0].clientX-panel.offsetWidth/2;
   x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
   panel.style.left=x+"px";
 });
 
-/* Yardımcılar */
-function updateLives(){livesEl.textContent="❤️".repeat(lives)}
-function collide(a,b){return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom)}
-function glow(){panel.classList.add("glow");setTimeout(()=>panel.classList.remove("glow"),200)}
-function shake(){document.body.style.transform="translateX(4px)";setTimeout(()=>document.body.style.transform="",80)}
+/* ==== YARDIMCI ==== */
+const collide=(a,b)=>!(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
+const glow=()=>{panel.classList.add("glow");setTimeout(()=>panel.classList.remove("glow"),200)};
+const shake=()=>{document.body.style.transform="translateX(5px)";setTimeout(()=>document.body.style.transform="",90)};
+const update=()=>{scoreEl.textContent=score;livesEl.textContent="❤️".repeat(lives)};
 
-/* Hikâye */
-const storyTexts=["Yıldız gibi parlıyorsun ✨","Kalbim seni seçti 💖","Az kaldı…","Hazır mısın ⭐"];
-function showStory(){
-  story.textContent=storyTexts[(level-1)%storyTexts.length];
+/* ==== HİKÂYE / GÖREV ==== */
+const missions=[
+  "⭐ 3 yıldız yakala",
+  "❤️ Can kaybetme",
+  "☄️ Meteorlerden kaç",
+  "🔤 Harf topla",
+  "💖 Kalbine güven"
+];
+
+function showStory(txt){
+  story.textContent=txt;
   story.classList.add("show");
-  setTimeout(()=>story.classList.remove("show"),2000);
+  setTimeout(()=>story.classList.remove("show"),2200);
 }
 
-/* Spawn */
+/* ==== SPAWN ==== */
 function spawn(type){
-  if(!running) return;
+  if(!running)return;
   if(type==="letter"){
-    let allowed=level<4?["Y","I","L"]:letters;
-    const pool=allowed.filter(l=>filledCounts[l]<maxCounts[l]&&!activeLetters.includes(l));
-    if(!pool.length) return;
+    const allowed=level<4?["Y","I","L"]:letters;
+    const pool=allowed.filter(l=>filled[l]<max[l]&&!active.includes(l));
+    if(!pool.length)return;
     const l=pool[Math.floor(Math.random()*pool.length)];
-    activeLetters.push(l);
+    active.push(l);
     const el=document.createElement("div");
-    el.className="item letter";
-    el.textContent=l;
-    el.letter=l;
+    el.className="item letter";el.textContent=l;el.letter=l;
     el.y=-40;el.x=Math.random()*(innerWidth-40);
     el.style.left=el.x+"px";
     document.body.appendChild(el);
@@ -215,74 +230,96 @@ function spawn(type){
   const el=document.createElement("div");
   el.className="item "+type;
   el.y=-60;el.x=Math.random()*(innerWidth-40);
-  el.speed=(type==="meteor"?3:2)*speedFactor;
+  el.speed=(type==="meteor"||type==="bomb"?3:2)*speed;
   el.style.left=el.x+"px";
   document.body.appendChild(el);
   items.push({el,type});
 }
 
-/* Kalp yağmuru */
+/* ==== KALP YAĞMURU ==== */
 function heartRain(){
-  for(let i=0;i<40;i++){
-    setTimeout(()=>spawn("heart"),i*60);
+  for(let i=0;i<50;i++){
+    setTimeout(()=>spawn("heart"),i*70);
   }
 }
 
-/* Loop */
+/* ==== LOOP ==== */
 function loop(){
-  if(!running) return;
-  const pRect=panel.getBoundingClientRect();
+  if(!running)return;
+  const p=panel.getBoundingClientRect();
   for(let i=items.length-1;i>=0;i--){
     const o=items[i];
     o.el.y+=(o.el.speed||2);
     o.el.style.top=o.el.y+"px";
     const r=o.el.getBoundingClientRect();
-
-    if(collide(r,pRect)){
+    if(collide(r,p)){
       if(o.type==="star"){score+=10;glow()}
       if(o.type==="heart"&&lives<3){lives++;navigator.vibrate?.(40)}
       if(o.type==="meteor"){lives--;shake()}
+      if(o.type==="bomb"){lives=0}
       if(o.type==="letter"){
-        const l=o.el.letter;
-        filledCounts[l]++;
-        activeLetters.splice(activeLetters.indexOf(l),1);
-        const box=[...boxes.children].find(b=>b.dataset.letter===l&&b.textContent==="");
-        if(box){box.textContent=l;box.classList.add("filled")}
-        if(Object.values(filledCounts).reduce((a,b)=>a+b,0)===6){
+        filled[o.el.letter]++;
+        const box=[...boxes.children].find(b=>b.dataset.letter===o.el.letter&&b.textContent==="");
+        if(box){box.textContent=o.el.letter;box.classList.add("filled")}
+        active.splice(active.indexOf(o.el.letter),1);
+        if(Object.values(filled).reduce((a,b)=>a+b,0)===6){
           running=false;
           setTimeout(()=>{
             heartRain();
-            endText.textContent="💖 Kalbim hep sende 💖";
-            over.style.display="flex";
-          },1000);
+            finalText.textContent="💖 Kalbim hep sende 💖";
+            final.style.display="flex";
+          },1200);
           return;
         }
       }
-      scoreEl.textContent=score;
-      updateLives();
+      update();
       o.el.remove();items.splice(i,1);
-      if(lives<=0){running=false;endText.textContent="Kaybettin";over.style.display="flex";return}
+      if(lives<=0){
+        running=false;
+        finalText.textContent="Kaybettin 💔";
+        final.style.display="flex";
+        return;
+      }
     }
-    if(o.el.y>innerHeight+60){
-      if(o.type==="letter")activeLetters.splice(activeLetters.indexOf(o.el.letter),1);
+    if(o.el.y>innerHeight+80){
+      if(o.type==="letter")active.splice(active.indexOf(o.el.letter),1);
       o.el.remove();items.splice(i,1);
     }
   }
   requestAnimationFrame(loop);
 }
 
-/* Level */
+/* ==== LEVEL ==== */
 setInterval(()=>{
-  const nl=Math.floor(score/120)+1;
-  if(nl!==level){level=nl;levelEl.textContent="Level: "+level;speedFactor+=.15;showStory()}
-},500);
+  const nl=Math.floor(score/150)+1;
+  if(nl!==level){
+    level=nl;levelEl.textContent="Level: "+level;
+    speed+=0.15;
+    missionEl.textContent="Görev: "+missions[(level-1)%missions.length];
+    showStory("Level "+level+" ⭐");
+  }
+},600);
 
-/* Zamanlayıcılar */
+/* ==== ZAMANLAYICILAR ==== */
 setInterval(()=>spawn("star"),800);
 setInterval(()=>spawn("meteor"),1300);
-setInterval(()=>spawn("heart"),5200);
-setInterval(()=>spawn("letter"),5500);
+setInterval(()=>spawn("bomb"),5200);
+setInterval(()=>spawn("heart"),4800);
+setInterval(()=>spawn("letter"),6000);
 
+/* ==== RESET ==== */
+function restart(){
+  score=0;lives=3;level=1;speed=1;running=true;
+  Object.keys(filled).forEach(k=>filled[k]=0);
+  [...boxes.children].forEach(b=>{b.textContent="";b.classList.remove("filled")});
+  items.forEach(i=>i.el.remove());
+  items.length=0;active.length=0;
+  final.style.display="none";
+  update();
+  loop();
+}
+
+update();
 loop();
 </script>
 </body>
