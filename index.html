@@ -2,192 +2,222 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>⭐ Yıldızım İçin ⭐</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nebula Love Game</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:linear-gradient(180deg,#0b0f2e,#1b1f4a);
-  color:white;
-  font-family:Arial,Helvetica,sans-serif;
-  overflow:hidden;
-  text-align:center;
-}
-#score{
-  font-size:32px;
-  margin:10px;
-}
-#game{
-  position:relative;
-  width:100vw;
-  height:80vh;
-  overflow:hidden;
-}
-.falling{
-  position:absolute;
-  font-size:42px;
-  user-select:none;
-}
-.star{color:#ffd700}
-.bomb{color:red}
-.heart{color:pink}
-.broken{color:#ff4d6d}
-
-#basket{
-  position:absolute;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:60px;
+* { box-sizing: border-box; margin:0; padding:0; font-family: Arial, sans-serif; }
+body {
+  background: radial-gradient(circle at top, #3a0f5c, #05010a 70%);
+  overflow: hidden;
+  color: white;
 }
 
-#message{
-  display:none;
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,.85);
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  z-index:10;
+/* Skor Panel */
+#scoreBoard {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 30px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  font-size: 22px;
 }
-#message h1{
-  font-size:36px;
-  margin-bottom:20px;
+
+/* Alt Panel */
+#bottomPanel {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
 }
-#message button{
-  padding:12px 24px;
-  font-size:18px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
+
+/* Cam Kutular */
+.box {
+  width: 70px;
+  height: 70px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+}
+
+/* Ateş Butonu */
+#fireBtn {
+  position: absolute;
+  right: 20px;
+  bottom: 40px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff4d4d, #8b0000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Objeler */
+.falling {
+  position: absolute;
+  top: -50px;
+  font-size: 36px;
+  text-shadow: 0 0 15px gold;
+}
+
+.star { color: gold; }
+.letter { color: #fff; text-shadow: 0 0 20px #ffd700; }
+.meteor {
+  color: red;
+  text-shadow: 0 0 25px orange;
+}
+
+/* Final */
+#finalScreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+#finalScreen h1 { font-size: 40px; margin-bottom: 20px; }
+#finalScreen button {
+  padding: 15px 30px;
+  font-size: 20px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div id="score">❤️ Skor: <span id="points">0</span></div>
+<div id="scoreBoard">⭐ Skor: <span id="score">0</span></div>
 
-<div id="game">
-  <div id="basket">🗑️</div>
+<div id="bottomPanel"></div>
 
-  <div id="message">
-    <h1>⭐ Yıldızım, seni çok seviyorum ❤️</h1>
-    <button onclick="restart()">Tekrar Oyna</button>
-  </div>
+<div id="fireBtn">🔥</div>
+
+<div id="finalScreen">
+  <h1>❤️ Sen Kazandın ❤️</h1>
+  <p id="finalScore"></p>
+  <button onclick="restartGame()">🔁 Tekrar Oyna</button>
 </div>
 
 <script>
-const game = document.getElementById("game");
-const basket = document.getElementById("basket");
-const pointsEl = document.getElementById("points");
-const message = document.getElementById("message");
-
-let basketX = window.innerWidth / 2;
 let score = 0;
-let gameOver = false;
+let letters = ["Y","I","L","D","I","Z"];
+let activeLetters = [...letters];
+let meteorHits = 0;
+let gameInterval;
 
-document.addEventListener("mousemove", e=>{
-  basketX = e.clientX;
-  basket.style.left = basketX + "px";
+/* Kutuları oluştur */
+const bottomPanel = document.getElementById("bottomPanel");
+letters.forEach(l => {
+  const box = document.createElement("div");
+  box.className = "box";
+  box.dataset.letter = l;
+  bottomPanel.appendChild(box);
 });
 
-document.addEventListener("touchmove", e=>{
-  basketX = e.touches[0].clientX;
-  basket.style.left = basketX + "px";
-});
-
-function createItem(){
-  if(gameOver) return;
-
-  const item = document.createElement("div");
-  item.classList.add("falling");
-
+/* Obje üret */
+function spawnObject() {
+  const obj = document.createElement("div");
   const rand = Math.random();
-  if(rand < 0.6){
-    item.textContent = "⭐";
-    item.classList.add("star");
-    item.type = "star";
-  }else if(rand < 0.75){
-    item.textContent = "❤️";
-    item.classList.add("heart");
-    item.type = "heart";
-  }else if(rand < 0.9){
-    item.textContent = "💔";
-    item.classList.add("broken");
-    item.type = "broken";
-  }else{
-    item.textContent = "💣";
-    item.classList.add("bomb");
-    item.type = "bomb";
+
+  if (rand < 0.4) {
+    obj.textContent = "⭐";
+    obj.className = "falling star";
+    obj.dataset.type = "star";
+  } else if (rand < 0.7 && activeLetters.length) {
+    const letter = activeLetters[Math.floor(Math.random()*activeLetters.length)];
+    obj.textContent = letter;
+    obj.className = "falling letter";
+    obj.dataset.type = "letter";
+    obj.dataset.letter = letter;
+  } else {
+    obj.textContent = "☄️";
+    obj.className = "falling meteor";
+    obj.dataset.type = "meteor";
+    obj.dataset.hp = 5;
   }
 
-  item.style.left = Math.random() * (window.innerWidth - 40) + "px";
-  item.style.top = "-50px";
-  game.appendChild(item);
+  obj.style.left = Math.random() * (window.innerWidth - 50) + "px";
+  document.body.appendChild(obj);
 
-  let y = -50;
-  const fall = setInterval(()=>{
-    if(gameOver){
+  let top = -50;
+  const fall = setInterval(() => {
+    top += 3;
+    obj.style.top = top + "px";
+
+    if (top > window.innerHeight - 120) {
+      handleCollision(obj);
       clearInterval(fall);
-      item.remove();
-      return;
+      obj.remove();
     }
-
-    y += 4;
-    item.style.top = y + "px";
-
-    const itemRect = item.getBoundingClientRect();
-    const basketRect = basket.getBoundingClientRect();
-
-    if(
-      itemRect.bottom >= basketRect.top &&
-      itemRect.left < basketRect.right &&
-      itemRect.right > basketRect.left
-    ){
-      handleCatch(item.type);
-      clearInterval(fall);
-      item.remove();
-    }
-
-    if(y > window.innerHeight){
-      clearInterval(fall);
-      item.remove();
-    }
-  },20);
+  }, 20);
 }
 
-function handleCatch(type){
-  if(type === "star") score += 10;
-  if(type === "heart") score += 5;
-  if(type === "broken") score -= 5;
-  if(type === "bomb"){
-    endGame();
-    return;
+/* Çarpışma */
+function handleCollision(obj) {
+  if (obj.dataset.type === "star") {
+    score += 10;
   }
-
-  pointsEl.textContent = score;
-
-  if(score >= 100){
-    endGame(true);
+  if (obj.dataset.type === "meteor") {
+    score = Math.max(0, score - 20);
   }
+  if (obj.dataset.type === "letter") {
+    const box = [...document.querySelectorAll(".box")]
+      .find(b => b.dataset.letter === obj.dataset.letter && !b.textContent);
+    if (box) {
+      box.textContent = obj.dataset.letter;
+      activeLetters = activeLetters.filter(l => l !== obj.dataset.letter);
+      if (activeLetters.length === 0) endGame();
+    }
+  }
+  document.getElementById("score").textContent = score;
 }
 
-function endGame(win=false){
-  gameOver = true;
-  message.style.display = "flex";
-  if(!win){
-    message.querySelector("h1").textContent =
-      "💔 Oyun Bitti ama sevgim bitmez ❤️";
-  }
+/* Ateş */
+document.getElementById("fireBtn").onclick = () => {
+  document.querySelectorAll(".meteor").forEach(m => {
+    m.dataset.hp--;
+    if (m.dataset.hp <= 0) m.remove();
+  });
+};
+
+/* Oyun Bitir */
+function endGame() {
+  clearInterval(gameInterval);
+  document.getElementById("finalScore").textContent = "Toplam Skor: " + score;
+  document.getElementById("finalScreen").style.display = "flex";
 }
 
-function restart(){
+/* Yeniden */
+function restartGame() {
   location.reload();
 }
 
-setInterval(createItem,800);
+/* Başlat */
+gameInterval = setInterval(spawnObject, 900);
 </script>
 
 </body>
