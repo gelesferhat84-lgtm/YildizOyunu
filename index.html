@@ -2,74 +2,66 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>YILDIZ – Ultimate Cinematic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>YILDIZ – Stabil Sürüm</title>
 
 <style>
 html,body{
-  margin:0;padding:0;width:100%;height:100%;
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
   overflow:hidden;
-  background:#05010a;
+  background:radial-gradient(circle at top,#2b0b4f,#05010a);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
   touch-action:none;
+  color:#fff;
 }
 
-/* ===== PARALAKS KATMANLARI ===== */
-#parallax{
-  position:fixed;inset:0;overflow:hidden;
-}
-.stars{
-  position:absolute;inset:-50%;
-  background-repeat:repeat;
-}
-.layer1{
+/* Arka plan yıldızlar */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
   background-image:
     radial-gradient(1px 1px at 20% 30%,#fff,transparent),
-    radial-gradient(1px 1px at 70% 60%,#fff,transparent);
-  opacity:.25;
-}
-.layer2{
-  background-image:
-    radial-gradient(1px 1px at 40% 20%,#fff,transparent),
-    radial-gradient(1px 1px at 80% 80%,#fff,transparent);
-  opacity:.18;
-}
-.layer3{
-  background-image:
-    radial-gradient(1px 1px at 10% 80%,#fff,transparent),
-    radial-gradient(1px 1px at 60% 40%,#fff,transparent);
-  opacity:.12;
-}
-
-/* ===== SCENE ===== */
-#scene{
-  position:fixed;inset:0;
-  overflow:hidden;
-  transition:transform .15s;
+    radial-gradient(1px 1px at 70% 60%,#fff,transparent),
+    radial-gradient(1px 1px at 40% 80%,#fff,transparent);
+  opacity:.2;
+  pointer-events:none;
 }
 
 /* HUD */
 #hud{
-  position:fixed;top:12px;left:12px;
-  color:#fff;z-index:30;font-size:15px;
+  position:fixed;
+  top:14px;
+  left:14px;
+  font-size:16px;
+  z-index:10;
 }
-#level,#mission{display:block;margin-top:4px}
+#lives{margin-left:8px}
 
 /* Panel */
 #panel{
-  position:fixed;bottom:80px;left:50%;
+  position:fixed;
+  bottom:80px;
+  left:50%;
   transform:translateX(-50%);
-  width:80px;height:14px;
+  width:90px;
+  height:14px;
   border-radius:20px;
   background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
-  box-shadow:0 0 36px rgba(255,80,180,.95);
-  z-index:20;
+  box-shadow:0 0 30px rgba(255,80,180,.9);
+  z-index:10;
 }
 
 /* Objeler */
-.item{position:absolute;top:-150px;pointer-events:none}
+.item{
+  position:absolute;
+  top:-60px;
+  pointer-events:none;
+}
 
-/* Yıldız */
 .star{
   width:18px;height:18px;
   background:radial-gradient(circle,#ffe58a,#ffb300);
@@ -77,181 +69,146 @@ html,body{
     50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,
     50% 70%,21% 91%,32% 57%,2% 35%,39% 35%
   );
-  box-shadow:0 0 16px gold;
+  box-shadow:0 0 14px gold;
 }
 
-/* Meteor */
 .meteor{
-  width:22px;height:20px;
-  border-radius:45% 55% 60% 40%;
-  background:radial-gradient(circle at 30% 30%,#fff,#ff3b00,#2b0000);
-  box-shadow:0 0 32px rgba(255,90,0,.95);
-}
-.meteor::after{
-  content:"";
-  position:absolute;
-  top:-100px;left:50%;
-  transform:translateX(-50%);
-  width:10px;height:100px;
-  background:linear-gradient(to top,rgba(255,150,0,.95),transparent);
-  filter:blur(2px);
-}
-
-/* Kara Delik */
-.blackhole{
-  width:170px;height:170px;
+  width:18px;height:18px;
   border-radius:50%;
-  background:
-    radial-gradient(circle,#000 50%,#000 58%),
-    conic-gradient(from 0deg,#ffe066,#ff9800,#ffe066);
-  animation:spin 2.2s linear infinite,pulse 3s ease-in-out infinite;
-  box-shadow:0 0 140px rgba(255,210,0,.9);
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.15)}
+  background:radial-gradient(circle,#bbb,#444);
+  box-shadow:0 0 20px rgba(200,200,200,.6);
 }
 
-/* ===== CINEMATIC FINAL ===== */
-#final{
-  display:none;
-  position:fixed;inset:0;
-  background:radial-gradient(circle,#000,#000 70%);
-  color:#fff;
-  z-index:100;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  text-align:center;
-}
-#final h1{
-  font-size:42px;
-  letter-spacing:6px;
-  margin-bottom:20px;
-  opacity:0;
-  animation:fadeIn 3s forwards;
-}
-#final p{
-  opacity:0;
-  animation:fadeIn 3s forwards 2s;
-}
-@keyframes fadeIn{
-  to{opacity:1}
-}
-#final button{
-  margin-top:30px;
-  padding:14px 36px;
-  border:none;
-  border-radius:24px;
-  font-size:18px;
-  background:#ff4d6d;
-  color:#fff;
-}
-
-/* ===== GAME OVER ===== */
+/* Game over */
 #over{
   display:none;
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.85);
-  color:#fff;
-  z-index:90;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.8);
+  z-index:20;
   align-items:center;
   justify-content:center;
   flex-direction:column;
 }
 #over button{
   margin-top:20px;
-  padding:14px 32px;
+  padding:12px 28px;
   border:none;
-  border-radius:24px;
-  font-size:18px;
+  border-radius:20px;
   background:#ff4d6d;
   color:#fff;
+  font-size:18px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="parallax">
-  <div class="stars layer1"></div>
-  <div class="stars layer2"></div>
-  <div class="stars layer3"></div>
+<div id="hud">
+  Skor: <span id="score">0</span>
+  <span id="lives">❤️❤️❤️</span>
 </div>
 
-<div id="scene">
-  <div id="hud">
-    Skor: <span id="score">0</span>
-    <span id="level">Level: 1</span>
-    <span id="mission">Görev: Hayatta kal</span>
-  </div>
-  <div id="panel"></div>
-</div>
-
-<div id="final">
-  <h1>YILDIZ</h1>
-  <p>Bu yolculuk kalpten kalbe</p>
-  <button onclick="location.reload()">Tekrar Oyna</button>
-</div>
+<div id="panel"></div>
 
 <div id="over">
-  <div>Oyun Bitti</div>
+  <div id="endText">Oyun Bitti</div>
   <button onclick="location.reload()">Tekrar Oyna</button>
 </div>
 
 <script>
-/* ===== SES MOTORU ===== */
-const AudioCtx=window.AudioContext||window.webkitAudioContext;
-const audio=new AudioCtx();
-function drone(freq,vol){
-  const o=audio.createOscillator();
-  const g=audio.createGain();
-  o.frequency.value=freq;
-  o.type="sine";
-  g.gain.value=vol;
-  o.connect(g).connect(audio.destination);
-  o.start();
-  return o;
-}
-const bg=drone(40,0.04);
+/* ===== DEĞİŞKENLER ===== */
+let score=0;
+let lives=3;
+let running=true;
 
-/* ===== OYUN ===== */
-let score=0,level=1,running=true,boss=false,timeScale=1;
-const scene=document.getElementById("scene");
+const panel=document.getElementById("panel");
 const scoreEl=document.getElementById("score");
-const levelEl=document.getElementById("level");
-const missionEl=document.getElementById("mission");
+const livesEl=document.getElementById("lives");
+const over=document.getElementById("over");
+const endText=document.getElementById("endText");
 
-/* Paralaks */
-let py=0;
-function parallax(){
-  py+=0.15*timeScale;
-  document.querySelector(".layer1").style.transform=`translateY(${py*0.3}px)`;
-  document.querySelector(".layer2").style.transform=`translateY(${py*0.6}px)`;
-  document.querySelector(".layer3").style.transform=`translateY(${py}px)`;
+const items=[];
+
+/* ===== PANEL KONTROL ===== */
+let dragging=false;
+panel.addEventListener("touchstart",()=>dragging=true);
+window.addEventListener("touchend",()=>dragging=false);
+window.addEventListener("touchmove",e=>{
+  if(!dragging) return;
+  let x=e.touches[0].clientX-panel.offsetWidth/2;
+  x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
+  panel.style.left=x+"px";
+});
+
+/* ===== YARDIMCI ===== */
+function updateLives(){
+  livesEl.textContent="❤️".repeat(lives);
+}
+function collide(a,b){
+  return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
 }
 
-/* Final */
-function cinematicFinal(){
-  running=false;
-  timeScale=0.2;
-  bg.frequency.linearRampToValueAtTime(20,audio.currentTime+3);
-  setTimeout(()=>{
-    document.getElementById("final").style.display="flex";
-  },2000);
+/* ===== SPAWN ===== */
+function spawn(type){
+  if(!running) return;
+
+  const el=document.createElement("div");
+  el.className="item "+type;
+  el.y=-40;
+  el.x=Math.random()*(innerWidth-40);
+  el.speed=type==="meteor"?3:2;
+  el.style.left=el.x+"px";
+
+  document.body.appendChild(el);
+  items.push({el,type});
 }
 
-/* Basit loop */
+/* ===== OYUN DÖNGÜSÜ ===== */
 function loop(){
-  if(running){
-    score+=0.1*timeScale;
-    scoreEl.textContent=Math.floor(score);
-    if(score>300) cinematicFinal();
-    parallax();
+  if(!running) return;
+
+  const pRect=panel.getBoundingClientRect();
+
+  for(let i=items.length-1;i>=0;i--){
+    const o=items[i];
+    o.el.y+=o.el.speed;
+    o.el.style.top=o.el.y+"px";
+    const r=o.el.getBoundingClientRect();
+
+    if(collide(r,pRect)){
+      if(o.type==="star"){
+        score+=10;
+        scoreEl.textContent=score;
+      }
+      if(o.type==="meteor"){
+        lives--;
+        updateLives();
+        if(lives<=0){
+          running=false;
+          endText.textContent="Kaybettin";
+          over.style.display="flex";
+        }
+      }
+      o.el.remove();
+      items.splice(i,1);
+      continue;
+    }
+
+    if(o.el.y>innerHeight+60){
+      o.el.remove();
+      items.splice(i,1);
+    }
   }
+
   requestAnimationFrame(loop);
 }
+
+/* ===== ZAMANLAYICILAR ===== */
+setInterval(()=>spawn("star"),900);
+setInterval(()=>spawn("meteor"),1400);
+
+updateLives();
 loop();
 </script>
 
