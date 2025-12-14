@@ -2,122 +2,165 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>YILDIZ – Final Test</title>
+<title>YILDIZ ❤️</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-html,body{margin:0;overflow:hidden;background:#000}
-canvas{display:block}
-#ui{
- position:fixed;top:10px;width:100%;
- text-align:center;color:white;
- font:22px Arial;z-index:10
+html,body{
+  margin:0; padding:0; overflow:hidden;
+  background:#000; font-family:Arial,Helvetica,sans-serif;
 }
-#restart{
- display:none;
- position:fixed;
- top:55%;
- left:50%;
- transform:translate(-50%,-50%);
- padding:12px 24px;
- font-size:20px;
- border:none;
- border-radius:30px;
- background:#ffcc00;
- cursor:pointer;
- z-index:20
+canvas{display:block}
+
+/* 💗 PEMBE CAM GÖREV KARTI */
+#mission{
+  position:fixed;
+  top:15px; left:15px;
+  width:140px; height:140px;
+  background:rgba(255,180,200,0.25);
+  backdrop-filter: blur(12px);
+  border-radius:18px;
+  border:1.5px solid rgba(255,150,180,0.8);
+  box-shadow:0 0 20px rgba(255,140,180,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:10;
+}
+#letters{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  font-size:22px;
+  color:#fff4;
+  text-align:center;
+}
+#letters .on{
+  color:#fff;
+  text-shadow:0 0 8px #ffb6c1;
+}
+
+/* SKOR */
+#score{
+  position:fixed;
+  top:20px; left:50%;
+  transform:translateX(-50%);
+  color:white;
+  font-size:22px;
+  z-index:10;
 }
 </style>
 </head>
 <body>
 
-<div id="ui">⭐ 0</div>
-<button id="restart" onclick="location.reload()">🔁 Tekrar Oyna</button>
+<div id="mission">
+  <div id="letters">
+    <div id="l0">Y</div>
+    <div id="l1">I</div>
+    <div id="l2">L</div>
+    <div id="l3">D</div>
+    <div id="l4">I</div>
+    <div id="l5">Z</div>
+  </div>
+</div>
+
+<div id="score">⭐ 0</div>
 <canvas id="game"></canvas>
 
 <script>
-const c=document.getElementById("game"),ctx=c.getContext("2d");
-c.width=innerWidth;c.height=innerHeight;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize(); addEventListener("resize",resize);
 
-const player={x:c.width/2,y:c.height-90,r:34};
-const stars=[],meteors=[],aliens=[],bullets=[];
-let score=0,gameOver=false;
+/* 🌌 NEBULA ARKA PLAN */
+const farStars=[], midStars=[];
+for(let i=0;i<120;i++) farStars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.2,s:Math.random()*0.15+0.05});
+for(let i=0;i<60;i++) midStars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2,s:Math.random()*0.35+0.2});
 
-/* kontrol */
+function drawBackground(){
+  const g = ctx.createRadialGradient(
+    canvas.width/2,canvas.height/2,100,
+    canvas.width/2,canvas.height/2,canvas.width
+  );
+  g.addColorStop(0,"#1a0b2e");
+  g.addColorStop(0.5,"#2a1045");
+  g.addColorStop(1,"#05010a");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  for(let i=0;i<3;i++){
+    const x=canvas.width*(0.2+Math.random()*0.6);
+    const y=canvas.height*(0.2+Math.random()*0.6);
+    const r=canvas.width*(0.3+Math.random()*0.3);
+    const neb=ctx.createRadialGradient(x,y,0,x,y,r);
+    neb.addColorStop(0,"rgba(255,160,200,0.07)");
+    neb.addColorStop(0.6,"rgba(180,100,255,0.05)");
+    neb.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=neb;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  }
+
+  ctx.fillStyle="#ffffff55";
+  farStars.forEach(s=>{
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    s.y+=s.s; if(s.y>canvas.height) s.y=0;
+  });
+
+  ctx.fillStyle="#ffffffaa";
+  midStars.forEach(s=>{
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    s.y+=s.s; if(s.y>canvas.height) s.y=0;
+  });
+}
+
+/* 🎮 OYUNCU */
+const player={x:canvas.width/2,y:canvas.height-80,r:28};
 addEventListener("mousemove",e=>player.x=e.clientX);
 addEventListener("touchmove",e=>player.x=e.touches[0].clientX);
 
-/* yıldız */
-setInterval(()=>!gameOver&&stars.push({x:Math.random()*c.width,y:-20,r:10,v:1.5}),700);
-/* meteor */
-setInterval(()=>!gameOver&&meteors.push({x:Math.random()*c.width,y:-40,r:18,v:5+Math.random()*3}),1300);
-/* ufo */
-setInterval(()=>!gameOver&&aliens.push({x:Math.random()*c.width,y:-60,state:0,t:0}),4200);
+/* ⭐ YILDIZLAR */
+let stars=[], score=0;
+setInterval(()=>{
+  stars.push({x:Math.random()*canvas.width,y:-20,r:12});
+},700);
 
-function loop(){
- ctx.clearRect(0,0,c.width,c.height);
- ctx.fillStyle="#020718";ctx.fillRect(0,0,c.width,c.height);
-
- /* ⭐ */
- stars.forEach((s,i)=>{
-  s.y+=s.v;
-  ctx.fillStyle="#fff6c8";
-  ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fill();
-  if(Math.hypot(s.x-player.x,s.y-player.y)<s.r+player.r){
-   stars.splice(i,1);score++;ui.innerText="⭐ "+score;
+/* 🔤 GÖREV */
+const mission=[false,false,false,false,false,false];
+function checkMission(){
+  const i=Math.floor(score/3)-1;
+  if(i>=0 && i<6 && !mission[i]){
+    mission[i]=true;
+    document.getElementById("l"+i).classList.add("on");
   }
- });
-
- /* ☄️ METEOR – ATEŞLİ */
- meteors.forEach((m,i)=>{
-  m.y+=m.v;
-  let g=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,30);
-  g.addColorStop(0,"#fff");
-  g.addColorStop(0.4,"orange");
-  g.addColorStop(1,"red");
-  ctx.fillStyle=g;
-  ctx.beginPath();ctx.arc(m.x,m.y,m.r,0,6.28);ctx.fill();
-  if(Math.hypot(m.x-player.x,m.y-player.y)<m.r+player.r) end();
- });
-
- /* 👾 UFO */
- aliens.forEach(a=>{
-  if(a.state===0){a.y+=2;if(a.y>120)a.state=1}
-  else if(a.state===1){
-   a.t++; if(a.t%50===0) bullets.push({x:a.x,y:a.y+18});
-   if(a.t>180)a.state=2;
-  }else a.y-=2;
-
-  // gövde
-  ctx.fillStyle="#aaa";
-  ctx.beginPath();ctx.ellipse(a.x,a.y,35,12,0,0,6.28);ctx.fill();
-  // cam
-  ctx.fillStyle="rgba(120,200,255,.6)";
-  ctx.beginPath();ctx.arc(a.x,a.y-8,10,0,6.28);ctx.fill();
- });
-
- /* 🔫 ateş */
- bullets.forEach((b,i)=>{
-  b.y+=5;
-  ctx.strokeStyle="red";
-  ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x,b.y+12);ctx.stroke();
-  if(Math.hypot(b.x-player.x,b.y-player.y)<player.r) end();
- });
-
- /* oyuncu */
- ctx.strokeStyle="#bdf";ctx.lineWidth=4;
- ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,6.28);ctx.stroke();
-
- if(!gameOver) requestAnimationFrame(loop);
 }
 
-function end(){
- gameOver=true;
- restart.style.display="block";
- ctx.fillStyle="white";
- ctx.font="28px Arial";
- ctx.fillText("Oyun Bitti",c.width/2-70,c.height/2);
-}
+/* 🔁 DÖNGÜ */
+function loop(){
+  drawBackground();
 
+  // oyuncu
+  ctx.fillStyle="#ffd1dc";
+  ctx.beginPath(); ctx.arc(player.x,player.y,player.r,0,Math.PI*2); ctx.fill();
+
+  // yıldızlar
+  ctx.fillStyle="#fff";
+  stars.forEach((s,i)=>{
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+    s.y+=4;
+    if(Math.hypot(s.x-player.x,s.y-player.y)<s.r+player.r){
+      stars.splice(i,1);
+      score++;
+      document.getElementById("score").innerText="⭐ "+score;
+      checkMission();
+    }
+    if(s.y>canvas.height) stars.splice(i,1);
+  });
+
+  requestAnimationFrame(loop);
+}
 loop();
 </script>
 </body>
