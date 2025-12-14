@@ -2,202 +2,253 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Romantik Yıldız Oyunu</title>
+<title>⭐ Yıldız Oyunu ⭐</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
+html,body{
+  margin:0;
+  padding:0;
   overflow:hidden;
-  height:100vh;
-  background:linear-gradient(120deg,#ffb6c1,#ffd1dc);
-  font-family:Arial,sans-serif;
+  font-family:Arial, sans-serif;
 }
 
-/* Sepet */
-#basket{
-  position:absolute;
-  bottom:130px;
-  left:50%;
-  transform:translateX(-50%);
-  width:140px;
-  height:40px;
-  border-radius:20px;
-  background:rgba(255,255,255,0.7);
-  backdrop-filter:blur(6px);
-  transition:0.1s;
+/* 🌌 GECE GÖKYÜZÜ */
+body{
+  background: radial-gradient(circle at bottom, #0a102a, #00010a);
+  color:white;
 }
 
-/* Alt kutular */
-#boxes{
-  position:absolute;
-  bottom:20px;
+/* ✨ ARKA PLAN YILDIZLAR */
+.star-bg{
+  position:fixed;
+  width:2px;
+  height:2px;
+  background:white;
+  opacity:.8;
+  border-radius:50%;
+  animation: twinkle 3s infinite alternate;
+}
+
+@keyframes twinkle{
+  from{opacity:.3}
+  to{opacity:1}
+}
+
+/* ❤️ SKOR */
+#score{
+  position:fixed;
+  top:10px;
   width:100%;
+  text-align:center;
+  font-size:32px;
+  z-index:10;
+}
+
+/* ⭐ ORTA YAZI */
+#name{
+  position:fixed;
+  top:70px;
+  width:100%;
+  text-align:center;
+  font-size:36px;
+  letter-spacing:10px;
+  z-index:10;
+}
+
+/* 📦 HARF KUTULARI */
+#boxes{
+  position:fixed;
+  bottom:20px;
+  left:10px;
   display:flex;
-  justify-content:center;
-  gap:12px;
+  gap:6px;
+  z-index:10;
 }
 .box{
-  width:65px;
-  height:65px;
-  border-radius:14px;
-  background:rgba(255,255,255,0.4);
-  backdrop-filter:blur(6px);
+  width:45px;
+  height:45px;
+  border:2px solid white;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:28px;
-  font-weight:bold;
-  color:#d63384;
+  font-size:26px;
+  background:rgba(255,255,255,0.1);
 }
 
-/* Yıldız */
-.star{
-  position:absolute;
-  font-size:52px;
-  filter:drop-shadow(0 0 6px gold);
-  pointer-events:none;
+/* 🗑️ SEPET */
+#basket{
+  position:fixed;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:48px;
+  z-index:10;
 }
 
-/* Final ekran */
+/* ⭐ NESNELER */
+.fall{
+  position:fixed;
+  top:-50px;
+  font-size:36px;
+}
+
+/* 🎉 FİNAL */
 #final{
-  position:absolute;
-  inset:0;
-  background:rgba(255,182,193,0.95);
   display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  flex-direction:column;
-  text-align:center;
+  z-index:20;
 }
 #final h1{
-  color:#b4004e;
-  margin-bottom:20px;
+  font-size:36px;
+  text-align:center;
 }
-#final button{
+button{
   padding:10px 20px;
-  border:none;
-  border-radius:20px;
-  background:#ff4f81;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
+  font-size:20px;
+  margin-top:20px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="basket"></div>
+<div id="score">❤️ 0</div>
+<div id="name">⭐ _ _ _ _ _ _ ⭐</div>
 
-<div id="boxes"></div>
+<div id="boxes">
+  <div class="box" data-l="Y"></div>
+  <div class="box" data-l="I"></div>
+  <div class="box" data-l="L"></div>
+  <div class="box" data-l="D"></div>
+  <div class="box" data-l="I2"></div>
+  <div class="box" data-l="Z"></div>
+</div>
+
+<div id="basket">🗑️</div>
 
 <div id="final">
-  <h1>💖 Tebrikler aşkım<br>İsmini topladın<br>Kocan seni çok seviyor 💖</h1>
+  <h1>⭐ Yıldız seni çok seviyorum ⭐</h1>
   <button onclick="location.reload()">Tekrar Oyna</button>
 </div>
 
 <script>
-/* AYARLAR */
-const nameLetters = ["A","Y","Ş","E","N","U"]; // 6 harf – DEĞİŞTİREBİLİRSİN
-let activeLetters = [...nameLetters];
-let filled = {};
-let basket = document.getElementById("basket");
-let boxes = document.getElementById("boxes");
+/* 🌌 ARKA PLAN YILDIZ OLUŞTUR */
+for(let i=0;i<120;i++){
+  let s=document.createElement("div");
+  s.className="star-bg";
+  s.style.left=Math.random()*100+"%";
+  s.style.top=Math.random()*100+"%";
+  s.style.animationDuration=(2+Math.random()*4)+"s";
+  document.body.appendChild(s);
+}
 
-/* Kutuları oluştur */
-nameLetters.forEach(l=>{
-  let b=document.createElement("div");
-  b.className="box";
-  b.dataset.letter=l;
-  boxes.appendChild(b);
+let basket=document.getElementById("basket");
+let score=0;
+let letters=["Y","I","L","D","I","Z"];
+let doneLetters=[];
+
+/* 🗑️ KAYDIRMA */
+document.addEventListener("touchmove",e=>{
+  basket.style.left=e.touches[0].clientX+"px";
 });
-
-/* Sepet kontrol */
 document.addEventListener("mousemove",e=>{
   basket.style.left=e.clientX+"px";
 });
 
-/* Yıldız oluştur */
-function dropStar(){
-  if(activeLetters.length===0) return;
+/* ⭐ DÜŞEN NESNE */
+function drop(){
+  let d=document.createElement("div");
+  d.className="fall";
+  let type=Math.random();
 
-  let letter = activeLetters[Math.floor(Math.random()*activeLetters.length)];
-  let star=document.createElement("div");
-  star.className="star";
-  star.innerHTML="⭐"+letter;
-  star.style.left=Math.random()*(window.innerWidth-50)+"px";
-  star.style.top="-60px";
-  document.body.appendChild(star);
+  if(type<0.6){
+    let l=letters[Math.floor(Math.random()*letters.length)];
+    if(doneLetters.includes(l)) return;
+    d.textContent="⭐"+l;
+    d.dataset.letter=l;
+  }else if(type<0.75){
+    d.textContent="💣";
+    d.dataset.bomb=1;
+  }else if(type<0.9){
+    d.textContent="💔";
+    d.dataset.break=1;
+  }else{
+    d.textContent="🚀";
+    d.dataset.rocket=1;
+  }
 
-  let y= -60;
+  d.style.left=Math.random()*90+"%";
+  document.body.appendChild(d);
+
+  let y=0;
   let fall=setInterval(()=>{
     y+=3;
-    star.style.top=y+"px";
+    d.style.top=y+"px";
 
-    let sRect=star.getBoundingClientRect();
-    let bRect=basket.getBoundingClientRect();
+    let b=basket.getBoundingClientRect();
+    let r=d.getBoundingClientRect();
 
-    if(
-      sRect.bottom>bRect.top &&
-      sRect.left<bRect.right &&
-      sRect.right>bRect.left
-    ){
-      checkBox(letter,star);
+    if(r.bottom>b.top && r.left<b.right && r.right>b.left){
       clearInterval(fall);
+      d.remove();
+
+      if(d.dataset.letter){
+        doneLetters.push(d.dataset.letter);
+        score+=10;
+        fillBox(d.dataset.letter);
+      }
+      if(d.dataset.bomb) score-=5;
+      if(d.dataset.break) score-=10;
+      if(d.dataset.rocket) endGame();
+      update();
     }
 
     if(y>window.innerHeight){
-      star.remove();
       clearInterval(fall);
+      d.remove();
     }
-  },16);
+  },20);
 }
 
-/* Kutu kontrol */
-function checkBox(letter,star){
-  let box=document.querySelector(`.box[data-letter='${letter}']`);
-  if(!filled[letter]){
-    box.textContent=letter;
-    filled[letter]=true;
-    activeLetters=activeLetters.filter(l=>l!==letter);
-    miniCelebrate(box);
-    if(activeLetters.length===0) endGame();
+function fillBox(l){
+  let box=document.querySelector(`.box[data-l="${l}"]`);
+  if(box && box.textContent===""){
+    box.textContent=l;
+    updateName();
+    checkWin();
   }
-  star.remove();
 }
 
-/* Mini kutlama */
-function miniCelebrate(box){
-  box.style.background="rgba(255,255,255,0.8)";
-  setTimeout(()=>box.style.background="rgba(255,255,255,0.4)",300);
+function updateName(){
+  let text="⭐ ";
+  ["Y","I","L","D","I","Z"].forEach(l=>{
+    text+=doneLetters.includes(l)?l+" ":"_ ";
+  });
+  text+="⭐";
+  document.getElementById("name").textContent=text;
 }
 
-/* Final */
-function endGame(){
-  setTimeout(()=>{
+function update(){
+  document.getElementById("score").textContent="❤️ "+score;
+}
+
+function checkWin(){
+  if(doneLetters.length>=6){
     document.getElementById("final").style.display="flex";
-    edgeCelebrate();
-  },600);
-}
-
-/* Kenar kutlaması */
-function edgeCelebrate(){
-  for(let i=0;i<80;i++){
-    let p=document.createElement("div");
-    p.style.position="fixed";
-    p.style.width="8px";
-    p.style.height="8px";
-    p.style.borderRadius="50%";
-    p.style.background="pink";
-    p.style.left=Math.random()*window.innerWidth+"px";
-    p.style.top=Math.random()<0.5?"0":"100%";
-    document.body.appendChild(p);
-    setTimeout(()=>p.remove(),3000);
   }
 }
 
-/* Oyun döngüsü */
-setInterval(dropStar,900);
+function endGame(){
+  document.getElementById("final").style.display="flex";
+}
+
+setInterval(drop,800);
 </script>
 
 </body>
