@@ -9,59 +9,51 @@
 html,body{
   margin:0;padding:0;width:100%;height:100%;
   overflow:hidden;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
   background:radial-gradient(circle at top,#2b0b4f,#05010a);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
   touch-action:none;
 }
 body::before{
   content:"";
   position:fixed;inset:0;
-  background-image:
+  background:
     radial-gradient(1px 1px at 20% 30%,#fff,transparent),
     radial-gradient(1px 1px at 70% 60%,#fff,transparent),
     radial-gradient(1px 1px at 40% 80%,#fff,transparent);
   opacity:.18;
+  pointer-events:none;
 }
-
 #hud{
   position:fixed;top:14px;left:14px;
   color:white;font-size:18px;z-index:20;
 }
 #panel{
-  position:fixed;
-  bottom:80px;
-  left:50%;
+  position:fixed;bottom:80px;left:50%;
   transform:translateX(-50%);
-  width:60px;height:14px;
-  border-radius:20px;
+  width:60px;height:14px;border-radius:20px;
   background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
   box-shadow:0 0 30px rgba(255,80,180,.9);
-  z-index:15;
 }
 #letterBoxes{
-  position:fixed;
-  bottom:20px;left:10px;
-  display:flex;gap:6px;
+  position:fixed;bottom:20px;left:10px;
+  display:flex;gap:6px;z-index:16;
 }
 .box{
-  width:28px;height:28px;
-  border-radius:6px;
+  width:28px;height:28px;border-radius:6px;
   background:rgba(255,255,255,.12);
+  backdrop-filter:blur(6px);
   border:1px solid rgba(255,255,255,.5);
-  color:white;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:bold;
+  box-shadow:inset 0 0 8px rgba(255,255,255,.4);
+  color:white;display:flex;
+  align-items:center;justify-content:center;
+  font-weight:bold;font-size:14px;
 }
-.box.filled{background:rgba(255,255,255,.25)}
-.item{position:absolute;top:-80px}
-
+.box.filled{background:rgba(255,255,255,.22);}
+.item{position:absolute;top:-80px;pointer-events:none;}
 .star{
   width:18px;height:18px;
   background:radial-gradient(circle,#ffe58a,#ffb300);
-  clip-path:polygon(
-    50% 0%,61% 35%,98% 35%,68% 57%,
-    79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%
-  );
+  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
   box-shadow:0 0 12px gold;
 }
 .heart{
@@ -71,76 +63,75 @@ body::before{
   border-radius:50% 50% 0 0;
 }
 .heart::before,.heart::after{
-  content:"";
-  position:absolute;width:22px;height:22px;
+  content:"";position:absolute;
+  width:22px;height:22px;
   background:#ff4d6d;border-radius:50%;
 }
 .heart::before{top:-11px}
 .heart::after{left:11px}
-
 .meteor{
   width:16px;height:16px;border-radius:50%;
-  background:radial-gradient(circle,#ffb74d,#e65100);
-  box-shadow:0 0 28px rgba(255,140,0,.9);
+  background:radial-gradient(circle,#bdbdbd,#424242);
+  box-shadow:0 0 28px rgba(255,255,255,.5);
 }
 .meteor::after{
-  content:"";position:absolute;top:-50px;left:50%;
+  content:"";position:absolute;
+  top:-50px;left:50%;
   transform:translateX(-50%);
   width:6px;height:50px;
-  background:linear-gradient(to top,rgba(255,140,0,.8),transparent);
+  background:linear-gradient(to top,rgba(255,255,255,.7),transparent);
 }
 .letter{
-  font-size:20px;font-weight:bold;
-  color:#ffe066;
-  text-shadow:0 0 12px #ffd700;
+  color:#ffd966;
+  font-size:22px;font-weight:bold;
+  text-shadow:0 0 14px gold;
 }
-
 #over{
   display:none;position:fixed;inset:0;
   background:rgba(0,0,0,.75);
   color:white;font-size:32px;
-  z-index:30;
-  align-items:center;justify-content:center;
-  flex-direction:column;
+  z-index:30;align-items:center;
+  justify-content:center;flex-direction:column;
 }
 #over button{
   margin-top:15px;padding:10px 22px;
   border:none;border-radius:14px;
-  background:#ff4d6d;color:white;font-size:18px;
+  background:#ff4d6d;color:white;
+  font-size:18px;
 }
 </style>
 </head>
 
 <body>
+<div id="hud">
+  Skor: <span id="score">0</span>
+  <span id="lives">❤️❤️❤️</span>
+</div>
 
-<div id="hud">Skor: <span id="score">0</span> ❤️❤️❤️</div>
 <div id="letterBoxes"></div>
 <div id="panel"></div>
 
 <div id="over">
-  <div id="endText"></div>
+  <div id="overText"></div>
   <button onclick="location.reload()">Tekrar Oyna</button>
 </div>
 
 <script>
 let score=0,lives=3,running=true;
-let speedMultiplier=1;
-
-const letters=["Y","I","L","D","I","Z"];
-const filled=[];
-const active=new Set();
-const items=[];
+const letters=["Y","I","I","L","D","Z"]; // 🔧 I iki kere
+const filled=new Set(),active=new Set(),items=[];
+let speedFactor=1;
 
 const panel=document.getElementById("panel");
 const scoreEl=document.getElementById("score");
+const livesEl=document.getElementById("lives");
 const over=document.getElementById("over");
-const endText=document.getElementById("endText");
+const overText=document.getElementById("overText");
 const boxes=document.getElementById("letterBoxes");
 
-letters.forEach(l=>{
+["Y","I","L","D","I","Z"].forEach(l=>{
   const b=document.createElement("div");
-  b.className="box";
-  b.dataset.letter=l;
+  b.className="box";b.dataset.letter=l;
   boxes.appendChild(b);
 });
 
@@ -148,47 +139,34 @@ let dragging=false;
 panel.addEventListener("touchstart",()=>dragging=true);
 window.addEventListener("touchend",()=>dragging=false);
 window.addEventListener("touchmove",e=>{
-  if(!dragging)return;
+  if(!dragging) return;
   let x=e.touches[0].clientX-panel.offsetWidth/2;
-  x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
-  panel.style.left=x+"px";
+  panel.style.left=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x))+"px";
 });
 
-function collide(a,b){
-  return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
-}
+function updateLives(){livesEl.textContent="❤️".repeat(lives);}
+function collide(a,b){return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);}
 
 function spawn(type){
-  if(!running) return;
-
   if(type==="letter"){
-    const pool=letters.filter(l=>{
-      const count=filled.filter(f=>f===l).length;
-      return count < letters.filter(x=>x===l).length;
-    });
+    const pool=letters.filter(l=>!filled.has(l)&&!active.has(l));
     if(!pool.length) return;
-
     const l=pool[Math.floor(Math.random()*pool.length)];
     active.add(l);
-
     const el=document.createElement("div");
-    el.className="item letter";
-    el.textContent=l;
-    el.letter=l;
-    el.y=-40;
+    el.className="item letter";el.textContent=l;
+    el.letter=l;el.y=-40;
     el.x=Math.random()*(innerWidth-40);
     el.style.left=el.x+"px";
     document.body.appendChild(el);
-    items.push({el,type,speed:2*speedMultiplier});
+    items.push({el,type,speed:2*speedFactor});
     return;
   }
-
   const el=document.createElement("div");
   el.className="item "+type;
-  el.y=-60;
-  el.x=Math.random()*(innerWidth-40);
+  el.y=-60;el.x=Math.random()*(innerWidth-40);
   el.style.left=el.x+"px";
-  el.speed=(type==="meteor"?3:2)*speedMultiplier;
+  el.speed=(type==="meteor"?3:2)*speedFactor;
   document.body.appendChild(el);
   items.push({el,type,speed:el.speed});
 }
@@ -196,7 +174,6 @@ function spawn(type){
 function loop(){
   if(!running) return;
   const pRect=panel.getBoundingClientRect();
-
   for(let i=items.length-1;i>=0;i--){
     const o=items[i];
     o.el.y+=o.speed;
@@ -205,48 +182,42 @@ function loop(){
 
     if(collide(r,pRect)){
       if(o.type==="star") score+=10;
+      if(o.type==="heart" && lives<3) lives++;
       if(o.type==="meteor") lives--;
       if(o.type==="letter"){
-        filled.push(o.el.letter);
-        const emptyBox=[...document.querySelectorAll(`[data-letter="${o.el.letter}"]`)]
-          .find(b=>b.textContent==="");
-        if(emptyBox){
-          emptyBox.textContent=o.el.letter;
-          emptyBox.classList.add("filled");
+        filled.add(o.el.letter);
+        active.delete(o.el.letter);
+        const box=[...document.querySelectorAll(".box")].find(b=>!b.textContent && b.dataset.letter===o.el.letter);
+        if(box){box.textContent=o.el.letter;box.classList.add("filled");}
+        if(filled.size===6){
+          running=false;
+          overText.textContent="Kazandın ✨";
+          over.style.display="flex";
         }
       }
-
       scoreEl.textContent=score;
-      o.el.remove();
-      items.splice(i,1);
-
-      if(filled.length===letters.length){
-        running=false;
-        panel.style.display="none";
-        endText.textContent="Kazandın ✨";
-        over.style.display="flex";
-      }
-
+      updateLives();
+      o.el.remove();items.splice(i,1);
       if(lives<=0){
         running=false;
-        endText.textContent="Kaybettin 💔";
+        overText.textContent="Kaybettin 💔";
         over.style.display="flex";
       }
+      continue;
     }
-
-    if(o.el.y>innerHeight){
-      o.el.remove();
-      items.splice(i,1);
+    if(o.el.y>innerHeight+60){
+      if(o.type==="letter") active.delete(o.el.letter);
+      o.el.remove();items.splice(i,1);
     }
   }
   requestAnimationFrame(loop);
 }
 
-setInterval(()=>{ speedMultiplier+=0.03 },5000);
 setInterval(()=>spawn("star"),900);
-setInterval(()=>spawn("heart"),5000);
+setInterval(()=>spawn("heart"),5200);
 setInterval(()=>spawn("meteor"),1200);
 setInterval(()=>spawn("letter"),1800);
+setInterval(()=>speedFactor+=0.1,10000); // 🔥 hızlanma
 
 loop();
 </script>
