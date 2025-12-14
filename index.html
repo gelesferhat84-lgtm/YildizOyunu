@@ -2,68 +2,86 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Uzay Oyunu</title>
 
 <style>
+/* ==== RESET & ARKA PLAN ==== */
 html,body{
   margin:0;
   padding:0;
+  width:100%;
+  height:100%;
   overflow:hidden;
-  font-family:Arial,Helvetica,sans-serif;
   background:
-    radial-gradient(circle at top,#0b1d33,#020611);
+    radial-gradient(circle at top,#2a0a4a,#05010a);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  touch-action:none;
 }
 
-/* HUD */
+/* Hafif yıldız dokusu */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%,#fff,transparent),
+    radial-gradient(1px 1px at 70% 60%,#fff,transparent),
+    radial-gradient(1px 1px at 40% 80%,#fff,transparent);
+  opacity:.15;
+  pointer-events:none;
+}
+
+/* ==== HUD ==== */
 #hud{
   position:fixed;
-  top:10px;
-  left:10px;
+  top:12px;
+  left:12px;
   color:#fff;
   font-size:18px;
   z-index:10;
 }
+#lives{margin-left:6px}
 
-/* PANEL */
+/* ==== PANEL ==== */
 #panel{
   position:fixed;
-  bottom:20px;
+  bottom:26px;
   left:50%;
   transform:translateX(-50%);
-  width:70px;
-  height:16px;
+  width:60px;
+  height:14px;
   border-radius:20px;
-  background:linear-gradient(90deg,#ff5fa2,#ff2d7a);
-  box-shadow:0 0 25px rgba(255,80,200,.9);
-  touch-action:none;
+  background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
+  box-shadow:0 0 25px rgba(255,80,180,.9);
+  z-index:8;
 }
 
-/* YILDIZ KUTULAR */
+/* ==== HARF KUTULARI ==== */
 #letterBoxes{
   position:fixed;
-  bottom:20px;
+  bottom:24px;
   left:10px;
   display:flex;
   gap:6px;
-  z-index:10;
+  z-index:9;
 }
 .box{
-  width:32px;
-  height:32px;
-  border:2px solid rgba(255,255,255,.6);
+  width:30px;
+  height:30px;
+  border:2px solid rgba(255,255,255,.5);
   color:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
   font-weight:bold;
-  font-size:16px;
+  font-size:15px;
 }
 .box.filled{
   background:rgba(255,255,255,.15);
 }
 
-/* NESNE */
+/* ==== DÜŞEN NESNELER ==== */
 .item{
   position:absolute;
   top:-80px;
@@ -73,7 +91,7 @@ html,body{
 /* YILDIZ */
 .star{
   width:18px;height:18px;
-  background:radial-gradient(circle,#ffe680,#ffb300);
+  background:radial-gradient(circle,#ffe58a,#ffb300);
   clip-path:polygon(
     50% 0%,61% 35%,98% 35%,
     68% 57%,79% 91%,50% 70%,
@@ -96,8 +114,8 @@ html,body{
   background:#ff4d6d;
   border-radius:50%;
 }
-.heart::before{top:-10px;left:0;}
-.heart::after{left:10px;top:0;}
+.heart::before{top:-10px}
+.heart::after{left:10px}
 
 /* METEOR */
 .meteor{
@@ -109,7 +127,8 @@ html,body{
 .meteor::after{
   content:"";
   position:absolute;
-  top:-45px;left:50%;
+  top:-45px;
+  left:50%;
   transform:translateX(-50%);
   width:6px;height:45px;
   background:linear-gradient(to top,rgba(255,140,0,.8),transparent);
@@ -120,6 +139,7 @@ html,body{
   color:#fff;
   font-size:20px;
   font-weight:bold;
+  text-shadow:0 0 10px rgba(255,255,255,.6);
 }
 
 /* GAME OVER */
@@ -127,19 +147,19 @@ html,body{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.7);
+  background:rgba(0,0,0,.75);
   color:white;
   font-size:32px;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
   z-index:20;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
 }
 #over button{
   margin-top:15px;
   padding:10px 22px;
   border:none;
-  border-radius:12px;
+  border-radius:14px;
   background:#ff4d6d;
   color:white;
   font-size:18px;
@@ -149,7 +169,8 @@ html,body{
 <body>
 
 <div id="hud">
-  Skor: <span id="score">0</span> <span id="lives">❤️❤️❤️</span>
+  Skor: <span id="score">0</span>
+  <span id="lives">❤️❤️❤️</span>
 </div>
 
 <div id="letterBoxes"></div>
@@ -161,19 +182,24 @@ html,body{
 </div>
 
 <script>
-let score=0, lives=3, running=true;
+/* ==== OYUN DEĞİŞKENLERİ ==== */
+let score=0;
+let lives=3;
+let running=true;
+
 const letters=["Y","I","L","D","I","Z"];
-const filledLetters=new Set();
-const activeLetters=new Set();
+const filled=new Set();
+const active=new Set();
 const items=[];
 
+/* ==== ELEMENTLER ==== */
+const panel=document.getElementById("panel");
 const scoreEl=document.getElementById("score");
 const livesEl=document.getElementById("lives");
-const panel=document.getElementById("panel");
 const over=document.getElementById("over");
 const boxes=document.getElementById("letterBoxes");
 
-/* KUTULAR */
+/* ==== KUTULAR ==== */
 letters.forEach(l=>{
   const b=document.createElement("div");
   b.className="box";
@@ -181,39 +207,43 @@ letters.forEach(l=>{
   boxes.appendChild(b);
 });
 
-/* PANEL */
-let drag=false;
-panel.addEventListener("pointerdown",()=>drag=true);
-addEventListener("pointerup",()=>drag=false);
-addEventListener("pointermove",e=>{
-  if(!drag) return;
-  let x=e.clientX-panel.offsetWidth/2;
+/* ==== PANEL HAREKET ==== */
+let dragging=false;
+panel.addEventListener("touchstart",()=>dragging=true);
+window.addEventListener("touchend",()=>dragging=false);
+window.addEventListener("touchmove",e=>{
+  if(!dragging) return;
+  let x=e.touches[0].clientX-panel.offsetWidth/2;
   x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
   panel.style.left=x+"px";
 });
 
+/* ==== YARDIMCI ==== */
 function updateLives(){
   livesEl.textContent="❤️".repeat(lives);
 }
+function collide(a,b){
+  return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
+}
 
+/* ==== SPAWN ==== */
 function spawn(type){
   if(type==="letter"){
-    const pool=letters.filter(l=>!filledLetters.has(l)&&!activeLetters.has(l));
+    const pool=letters.filter(l=>!filled.has(l)&&!active.has(l));
     if(!pool.length) return;
-    const letter=pool[Math.floor(Math.random()*pool.length)];
-    activeLetters.add(letter);
+    const l=pool[Math.floor(Math.random()*pool.length)];
+    active.add(l);
     const el=document.createElement("div");
     el.className="item letter";
-    el.textContent=letter;
-    el.letter=letter;
+    el.textContent=l;
+    el.letter=l;
     el.y=-40;
     el.x=Math.random()*(innerWidth-40);
     el.style.left=el.x+"px";
     document.body.appendChild(el);
-    items.push({el,type:"letter"});
+    items.push({el,type});
     return;
   }
-
   const el=document.createElement("div");
   el.className="item "+type;
   el.y=-60;
@@ -224,13 +254,10 @@ function spawn(type){
   items.push({el,type});
 }
 
-function hit(a,b){
-  return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
-}
-
+/* ==== OYUN DÖNGÜ ==== */
 function loop(){
   if(!running) return;
-  const panelRect=panel.getBoundingClientRect();
+  const pRect=panel.getBoundingClientRect();
 
   for(let i=items.length-1;i>=0;i--){
     const o=items[i];
@@ -238,13 +265,13 @@ function loop(){
     o.el.style.top=o.el.y+"px";
     const r=o.el.getBoundingClientRect();
 
-    if(hit(r,panelRect)){
+    if(collide(r,pRect)){
       if(o.type==="star") score+=10;
       if(o.type==="heart" && lives<3) lives++;
       if(o.type==="meteor") lives--;
       if(o.type==="letter"){
-        filledLetters.add(o.el.letter);
-        activeLetters.delete(o.el.letter);
+        filled.add(o.el.letter);
+        active.delete(o.el.letter);
         document.querySelector(`[data-letter="${o.el.letter}"]`)
           .classList.add("filled");
       }
@@ -252,12 +279,15 @@ function loop(){
       updateLives();
       o.el.remove();
       items.splice(i,1);
-      if(lives<=0){running=false;over.style.display="flex";}
+      if(lives<=0){
+        running=false;
+        over.style.display="flex";
+      }
       continue;
     }
 
-    if(o.el.y>innerHeight+50){
-      if(o.type==="letter") activeLetters.delete(o.el.letter);
+    if(o.el.y>innerHeight+60){
+      if(o.type==="letter") active.delete(o.el.letter);
       o.el.remove();
       items.splice(i,1);
     }
@@ -265,9 +295,9 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-/* SPAWN */
+/* ==== ZAMANLAYICILAR ==== */
 setInterval(()=>spawn("star"),900);
-setInterval(()=>spawn("heart"),5000);
+setInterval(()=>spawn("heart"),5200);
 setInterval(()=>spawn("meteor"),1200);
 setInterval(()=>spawn("letter"),1800);
 
