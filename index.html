@@ -2,459 +2,247 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>⭐ YILDIZ – Ultimate Master Edition</title>
+<title>⭐ YILDIZ – Void Runner</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- =====================================================
-     STYLE SECTION
-===================================================== -->
 <style>
-
-/* =====================================================
-   RESET & BASE
-===================================================== */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;height:100%;
+  background:#000;overflow:hidden;
+  font-family:system-ui,-apple-system;
+  touch-action:none;
 }
-
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background: radial-gradient(circle at top, #090e2a 0%, #000 70%);
-  overflow: hidden;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  user-select: none;
+#game{
+  position:relative;
+  width:100%;height:100%;
+  background:radial-gradient(circle at top,#0a0f2c,#000);
 }
-
-/* =====================================================
-   ROOT GAME CONTAINER
-===================================================== */
-#game-root {
-  position: relative;
-  width: 100%;
-  height: 100%;
+#hud{
+  position:absolute;top:10px;left:10px;right:10px;
+  display:flex;justify-content:space-between;
+  color:#fff;font-size:14px;z-index:10;
 }
-
-/* =====================================================
-   TOP HUD
-===================================================== */
-#hud {
-  position: absolute;
-  top: 10px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 16px;
-  color: #fff;
-  z-index: 20;
+#player{
+  position:absolute;
+  width:36px;height:36px;
+  border-radius:50%;
+  background:gold;
+  box-shadow:0 0 20px gold;
 }
-
-.hud-block {
-  font-size: 18px;
-  letter-spacing: 1px;
+.star,.void{
+  position:absolute;border-radius:50%;
 }
-
-/* =====================================================
-   BACKGROUND STARS (PARALLAX)
-===================================================== */
-.bg-star {
-  position: absolute;
-  color: rgba(255,255,255,0.2);
-  font-size: 10px;
-  pointer-events: none;
+.star{
+  width:20px;height:20px;
+  background:#ffd700;
+  box-shadow:0 0 12px gold;
 }
-
-/* =====================================================
-   FALLING STAR LETTERS
-===================================================== */
-.star {
-  position: absolute;
-  font-size: 42px;
-  pointer-events: none;
-  text-shadow:
-    0 0 10px gold,
-    0 0 20px gold,
-    0 0 35px orange;
+.void{
+  width:42px;height:42px;
+  background:#400;
+  box-shadow:0 0 25px red;
 }
-
-/* =====================================================
-   BASKET
-===================================================== */
-#basket {
-  position: absolute;
-  bottom: 90px;
-  width: 140px;
-  height: 42px;
-  border-radius: 24px;
-  background: linear-gradient(180deg, #ff4b4b, #900);
-  box-shadow: 0 0 25px rgba(255,0,0,0.6);
+#message{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  color:white;
+  font-size:22px;
+  text-align:center;
+  pointer-events:none;
+  opacity:0;
+  transition:.4s;
 }
-
-/* =====================================================
-   LETTER BOXES
-===================================================== */
-#letter-boxes {
-  position: absolute;
-  bottom: 20px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.letter-box {
-  width: 54px;
-  height: 54px;
-  border: 2px solid #fff;
-  background: rgba(255,255,255,0.05);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  color: #fff;
-}
-
-.letter-box.filled {
-  background: gold;
-  color: #000;
-  animation: fillPop 0.4s ease;
-}
-
-@keyframes fillPop {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.4); }
-  100% { transform: scale(1); }
-}
-
-/* =====================================================
-   LEVEL BANNER
-===================================================== */
-#level-banner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 48px;
-  color: gold;
-  display: none;
-  z-index: 40;
-}
-
-/* =====================================================
-   FINAL SCREEN
-===================================================== */
-#final-screen {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.94);
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  z-index: 100;
-  text-align: center;
-}
-
-#final-screen h1 {
-  font-size: 44px;
-  margin-bottom: 20px;
-}
-
-#final-screen button {
-  padding: 16px 36px;
-  font-size: 18px;
-  border: none;
-  background: gold;
-  cursor: pointer;
-  color: #000;
-}
-
 </style>
 </head>
 
 <body>
-
-<div id="game-root">
-
-  <!-- HUD -->
+<div id="game">
   <div id="hud">
-    <div class="hud-block">⭐ Skor: <span id="score">0</span></div>
-    <div class="hud-block">🎮 Level: <span id="level">1</span></div>
+    <div>⭐ <span id="score">0</span></div>
+    <div>⚡ <span id="energy">100</span></div>
+    <div>😨 <span id="panic">0</span></div>
+    <div>⬆️ Lv <span id="level">1</span></div>
   </div>
-
-  <!-- Level Banner -->
-  <div id="level-banner"></div>
-
-  <!-- Basket -->
-  <div id="basket"></div>
-
-  <!-- Letter Boxes -->
-  <div id="letter-boxes"></div>
-
-  <!-- Final -->
-  <div id="final-screen">
-    <h1>💛 SEN BENİM YILDIZIMSIN 💛</h1>
-    <p>Bu oyunun sonu yok…</p>
-    <button onclick="Game.restart()">Tekrar Oyna</button>
-  </div>
-
+  <div id="player"></div>
+  <div id="message"></div>
 </div>
 
-<!-- =====================================================
-     SCRIPT SECTION
-===================================================== -->
 <script>
+/* ================= CORE CONSTANTS ================= */
+const WORLD={
+  gravity:0.6,
+  friction:0.98,
+  panicLoss:0.35
+};
+const STATE={RUN:"RUN",DEAD:"DEAD"};
 
-/* =====================================================
-   GAME CONFIG
-===================================================== */
-const CONFIG = {
-  letters: ["Y","I","L","D","I","Z"],
-  baseSpeed: 1.4,
-  spawnRate: 900,
-  speedIncrement: 0.25
+/* ================= ENGINE STATE ================= */
+const Engine={
+  state:STATE.RUN,
+  score:0,
+  energy:100,
+  panic:0,
+  time:0,
+  level:1,
+  exp:0,
+  nextExp:100
 };
 
-/* =====================================================
-   CORE GAME OBJECT
-===================================================== */
-const Game = {
-  state: {
-    score: 0,
-    level: 1,
-    speed: CONFIG.baseSpeed,
-    activeLetters: [],
-    stars: [],
-    gameOver: false
-  },
+/* ================= PLAYER BODY ================= */
+const player={
+  x:innerWidth/2,
+  y:innerHeight-120,
+  vx:0,vy:0,
+  r:18
+};
+const playerEl=document.getElementById("player");
 
-  elements: {},
+/* ================= INPUT ================= */
+let inputX=player.x;
+addEventListener("mousemove",e=>inputX=e.clientX);
+addEventListener("touchmove",e=>inputX=e.touches[0].clientX);
 
-  init() {
-    this.cacheElements();
-    this.createBoxes();
-    this.resetLetters();
-    this.bindInput();
-    Background.init();
-    Loop.start();
-    Spawner.start();
-  },
+/* ================= OBJECT POOLS ================= */
+const stars=[],voids=[];
+const spawn={star:1200,void:2000};
 
-  cacheElements() {
-    this.elements.root = document.getElementById("game-root");
-    this.elements.basket = document.getElementById("basket");
-    this.elements.score = document.getElementById("score");
-    this.elements.level = document.getElementById("level");
-    this.elements.banner = document.getElementById("level-banner");
-    this.elements.final = document.getElementById("final-screen");
-    this.elements.boxes = document.getElementById("letter-boxes");
-  },
+/* ================= SPAWNERS ================= */
+setInterval(()=>Engine.state===STATE.RUN&&spawnStar(),spawn.star);
+setInterval(()=>Engine.state===STATE.RUN&&spawnVoid(),spawn.void);
 
-  createBoxes() {
-    CONFIG.letters.forEach(l => {
-      const b = document.createElement("div");
-      b.className = "letter-box";
-      b.textContent = l;
-      this.elements.boxes.appendChild(b);
-      this.state.activeLetters.push({ letter: l, filled: false, el: b });
-    });
-  },
+function spawnStar(){
+  stars.push({x:Math.random()*innerWidth,y:-20});
+}
+function spawnVoid(){
+  voids.push({x:Math.random()*innerWidth,y:-40});
+}
 
-  resetLetters() {
-    this.state.activeLetters.forEach(l => {
-      l.filled = false;
-      l.el.classList.remove("filled");
-    });
-  },
+/* ================= MISSIONS ================= */
+let mission=null,startScore=0,startTime=0;
+const missions=[
+  {t:"3 yıldız topla",c:()=>Engine.score>=startScore+30,r:()=>gainExp(40)},
+  {t:"Panik 10'a çıkmasın",c:()=>Engine.panic<10&&Engine.time>startTime+600,r:()=>gainExp(60)},
+  {t:"Enerji %80 üstü",c:()=>Engine.energy>80&&Engine.time>startTime+500,r:()=>gainExp(50)}
+];
 
-  bindInput() {
-    window.addEventListener("mousemove", e => this.moveBasket(e.clientX));
-    window.addEventListener("touchmove", e => {
-      this.moveBasket(e.touches[0].clientX);
-    });
-  },
+/* ================= GAME LOOP ================= */
+function update(){
+  if(Engine.state!==STATE.RUN)return;
+  Engine.time++;
 
-  moveBasket(x) {
-    const w = window.innerWidth;
-    const clamped = Math.max(70, Math.min(w - 70, x));
-    this.elements.basket.style.left = clamped + "px";
-  },
+  // kontrol + panik bozulması
+  const loss=Engine.panic*WORLD.panicLoss;
+  const target=inputX+(Math.random()-.5)*loss;
+  player.vx+=(target-player.x)*0.02;
+  player.vx*=WORLD.friction;
+  player.vy+=WORLD.gravity;
 
-  catchStar(star) {
-    const box = this.state.activeLetters.find(l => l.letter === star.letter && !l.filled);
-    if (!box) return;
+  player.x+=player.vx;
+  player.y+=player.vy;
 
-    box.filled = true;
-    box.el.classList.add("filled");
+  if(player.y>innerHeight-80){
+    player.y=innerHeight-80;
+    player.vy=0;
+  }
 
-    this.state.score += 100;
-    this.elements.score.textContent = this.state.score;
+  // enerji
+  Engine.energy-=0.02+Engine.panic*0.01;
+  if(Engine.energy<=0)die();
 
-    this.state.speed += CONFIG.speedIncrement;
-
-    Effects.miniCelebrate();
-
-    if (this.state.activeLetters.every(l => l.filled)) {
-      this.nextLevel();
+  // yıldızlar
+  stars.forEach((s,i)=>{
+    s.y+=2;
+    if(dist(s,player)<player.r+10){
+      Engine.score+=10;
+      Engine.energy=Math.min(100,Engine.energy+10);
+      Engine.panic=Math.max(0,Engine.panic-1);
+      gainExp(10);
+      stars.splice(i,1);
     }
-  },
+  });
 
-  nextLevel() {
-    this.state.level++;
-    this.elements.level.textContent = this.state.level;
-
-    this.elements.banner.textContent = "LEVEL " + this.state.level;
-    this.elements.banner.style.display = "block";
-
-    setTimeout(() => {
-      this.elements.banner.style.display = "none";
-      this.resetLetters();
-    }, 1500);
-  },
-
-  end() {
-    this.state.gameOver = true;
-    this.elements.final.style.display = "flex";
-  },
-
-  restart() {
-    location.reload();
-  }
-};
-
-/* =====================================================
-   STAR SPAWNER
-===================================================== */
-const Spawner = {
-  timer: null,
-
-  start() {
-    this.timer = setInterval(() => {
-      if (Game.state.gameOver) return;
-      this.spawn();
-    }, CONFIG.spawnRate);
-  },
-
-  spawn() {
-    const available = Game.state.activeLetters.filter(l => !l.filled);
-    if (!available.length) return;
-
-    const letter = available[Math.floor(Math.random() * available.length)].letter;
-
-    const el = document.createElement("div");
-    el.className = "star";
-    el.textContent = "⭐" + letter;
-    el.style.left = Math.random() * (window.innerWidth - 40) + "px";
-    el.style.top = "-60px";
-
-    Game.elements.root.appendChild(el);
-
-    Game.state.stars.push({
-      el,
-      letter,
-      y: -60
-    });
-  }
-};
-
-/* =====================================================
-   BACKGROUND PARALLAX
-===================================================== */
-const Background = {
-  stars: [],
-
-  init() {
-    for (let i = 0; i < 60; i++) {
-      const s = document.createElement("div");
-      s.className = "bg-star";
-      s.textContent = "✦";
-      s.style.left = Math.random() * window.innerWidth + "px";
-      s.style.top = Math.random() * window.innerHeight + "px";
-      document.body.appendChild(s);
-      this.stars.push(s);
+  // voidler
+  voids.forEach((v,i)=>{
+    v.y+=3;
+    if(dist(v,player)<player.r+20){
+      Engine.panic+=5;
+      Engine.energy-=15;
+      voids.splice(i,1);
     }
-  },
+  });
 
-  update() {
-    this.stars.forEach(s => {
-      let y = parseFloat(s.style.top);
-      y += 0.15;
-      if (y > window.innerHeight) y = 0;
-      s.style.top = y + "px";
-    });
+  // görev
+  if(!mission){
+    mission=missions[Math.floor(Math.random()*missions.length)];
+    startScore=Engine.score;
+    startTime=Engine.time;
+    msg("🎯 "+mission.t);
+  }else if(mission.c()){
+    mission.r();
+    msg("✅ Görev tamamlandı");
+    mission=null;
   }
-};
 
-/* =====================================================
-   EFFECTS
-===================================================== */
-const Effects = {
-  miniCelebrate() {
-    for (let i = 0; i < 10; i++) {
-      const h = document.createElement("div");
-      h.textContent = "💛";
-      h.style.position = "absolute";
-      h.style.left = Math.random() * window.innerWidth + "px";
-      h.style.top = Math.random() * window.innerHeight + "px";
-      document.body.appendChild(h);
-      setTimeout(() => h.remove(), 700);
-    }
+  render();
+  requestAnimationFrame(update);
+}
+
+/* ================= LEVEL ================= */
+function gainExp(x){
+  Engine.exp+=x;
+  if(Engine.exp>=Engine.nextExp){
+    Engine.level++;
+    Engine.exp=0;
+    Engine.nextExp=Math.floor(Engine.nextExp*1.4);
+    WORLD.gravity+=0.05;
+    spawn.star*=0.95;
+    spawn.void*=0.9;
+    Engine.energy=Math.min(100,Engine.energy+20);
+    Engine.panic=Math.max(0,Engine.panic-5);
+    msg("⬆️ LEVEL "+Engine.level);
   }
-};
+}
 
-/* =====================================================
-   MAIN LOOP
-===================================================== */
-const Loop = {
-  start() {
-    requestAnimationFrame(this.update.bind(this));
-  },
+/* ================= RENDER ================= */
+function render(){
+  playerEl.style.transform=
+    `translate(${player.x-player.r}px,${player.y-player.r}px)`;
 
-  update() {
-    if (!Game.state.gameOver) {
-      Game.state.stars.forEach((s, i) => {
-        s.y += Game.state.speed;
-        s.el.style.top = s.y + "px";
+  score.textContent=Engine.score;
+  energy.textContent=Engine.energy.toFixed(0);
+  panic.textContent=Engine.panic.toFixed(0);
+  level.textContent=Engine.level;
 
-        if (this.collide(s.el, Game.elements.basket)) {
-          Game.catchStar(s);
-          s.el.remove();
-          Game.state.stars.splice(i, 1);
-        } else if (s.y > window.innerHeight) {
-          s.el.remove();
-          Game.state.stars.splice(i, 1);
-        }
-      });
+  document.querySelectorAll(".star,.void").forEach(e=>e.remove());
+  stars.forEach(s=>{
+    const e=document.createElement("div");
+    e.className="star";
+    e.style.transform=`translate(${s.x}px,${s.y}px)`;
+    game.appendChild(e);
+  });
+  voids.forEach(v=>{
+    const e=document.createElement("div");
+    e.className="void";
+    e.style.transform=`translate(${v.x}px,${v.y}px)`;
+    game.appendChild(e);
+  });
+}
 
-      Background.update();
-    }
+/* ================= HELPERS ================= */
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function msg(t){
+  message.textContent=t;
+  message.style.opacity=1;
+  setTimeout(()=>message.style.opacity=0,1500);
+}
+function die(){
+  Engine.state=STATE.DEAD;
+  alert("💀 Kaçamadın\nSkor: "+Engine.score+"\nLevel: "+Engine.level);
+}
 
-    requestAnimationFrame(this.update.bind(this));
-  },
-
-  collide(a, b) {
-    const r1 = a.getBoundingClientRect();
-    const r2 = b.getBoundingClientRect();
-
-    return !(
-      r1.bottom < r2.top ||
-      r1.top > r2.bottom ||
-      r1.right < r2.left ||
-      r1.left > r2.right
-    );
-  }
-};
-
-/* =====================================================
-   START GAME
-===================================================== */
-Game.init();
-
+update();
 </script>
 </body>
 </html>
