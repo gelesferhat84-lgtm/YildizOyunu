@@ -2,215 +2,335 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>YILDIZ – Stabil Sürüm</title>
+<title>⭐ YILDIZ – Final Master Build</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-html,body{
-  margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:radial-gradient(circle at top,#2b0b4f,#05010a);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  touch-action:none;
-  color:#fff;
+/* ======================================================
+   GLOBAL
+====================================================== */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top, #0b102a, #000);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  user-select: none;
 }
 
-/* Arka plan yıldızlar */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background-image:
-    radial-gradient(1px 1px at 20% 30%,#fff,transparent),
-    radial-gradient(1px 1px at 70% 60%,#fff,transparent),
-    radial-gradient(1px 1px at 40% 80%,#fff,transparent);
-  opacity:.2;
-  pointer-events:none;
+/* ======================================================
+   GAME ROOT
+====================================================== */
+#game {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-/* HUD */
-#hud{
-  position:fixed;
-  top:14px;
-  left:14px;
-  font-size:16px;
-  z-index:10;
-}
-#lives{margin-left:8px}
-
-/* Panel */
-#panel{
-  position:fixed;
-  bottom:80px;
-  left:50%;
-  transform:translateX(-50%);
-  width:90px;
-  height:14px;
-  border-radius:20px;
-  background:linear-gradient(90deg,#ff6aa2,#ff2f7a);
-  box-shadow:0 0 30px rgba(255,80,180,.9);
-  z-index:10;
+/* ======================================================
+   SCORE
+====================================================== */
+#scoreBar {
+  position: absolute;
+  top: 10px;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  font-size: 26px;
+  letter-spacing: 2px;
+  z-index: 10;
 }
 
-/* Objeler */
-.item{
-  position:absolute;
-  top:-60px;
-  pointer-events:none;
+/* ======================================================
+   STARS (HARFLER)
+====================================================== */
+.star {
+  position: absolute;
+  font-size: 42px;
+  pointer-events: none;
+  text-shadow:
+    0 0 10px gold,
+    0 0 20px gold,
+    0 0 40px orange;
 }
 
-.star{
-  width:18px;height:18px;
-  background:radial-gradient(circle,#ffe58a,#ffb300);
-  clip-path:polygon(
-    50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,
-    50% 70%,21% 91%,32% 57%,2% 35%,39% 35%
-  );
-  box-shadow:0 0 14px gold;
+/* ======================================================
+   BASKET (SEPET)
+====================================================== */
+#basket {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 40px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ff3b3b, #a40000);
+  box-shadow: 0 0 20px red;
 }
 
-.meteor{
-  width:18px;height:18px;
-  border-radius:50%;
-  background:radial-gradient(circle,#bbb,#444);
-  box-shadow:0 0 20px rgba(200,200,200,.6);
+/* ======================================================
+   BOXES
+====================================================== */
+#boxes {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
-/* Game over */
-#over{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.8);
-  z-index:20;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
+.box {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #fff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: rgba(255,255,255,0.05);
 }
-#over button{
-  margin-top:20px;
-  padding:12px 28px;
-  border:none;
-  border-radius:20px;
-  background:#ff4d6d;
-  color:#fff;
-  font-size:18px;
+
+.box.filled {
+  background: gold;
+  color: #000;
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* ======================================================
+   FINAL
+====================================================== */
+#finalScreen {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: #fff;
+  z-index: 50;
+  text-align: center;
+}
+
+#finalScreen h1 {
+  font-size: 42px;
+  margin-bottom: 20px;
+}
+
+#finalScreen button {
+  padding: 14px 30px;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  background: gold;
+  color: #000;
 }
 </style>
 </head>
 
 <body>
+<div id="game">
 
-<div id="hud">
-  Skor: <span id="score">0</span>
-  <span id="lives">❤️❤️❤️</span>
-</div>
+  <div id="scoreBar">⭐ YILDIZ: <span id="score">0</span></div>
 
-<div id="panel"></div>
+  <div id="basket"></div>
 
-<div id="over">
-  <div id="endText">Oyun Bitti</div>
-  <button onclick="location.reload()">Tekrar Oyna</button>
+  <div id="boxes"></div>
+
+  <div id="finalScreen">
+    <h1>💛 SEN BENİM YILDIZIMSIN 💛</h1>
+    <p>Bu oyun bitti ama hisler bitmez.</p>
+    <button onclick="restartGame()">Tekrar Oyna</button>
+  </div>
+
 </div>
 
 <script>
-/* ===== DEĞİŞKENLER ===== */
-let score=0;
-let lives=3;
-let running=true;
+/* ======================================================
+   CORE STATE
+====================================================== */
+const LETTERS = ["Y","I","L","D","I","Z"];
+let activeLetters = [...LETTERS];
+let boxes = {};
+let stars = [];
+let score = 0;
+let speed = 1.4;
+let gameOver = false;
 
-const panel=document.getElementById("panel");
-const scoreEl=document.getElementById("score");
-const livesEl=document.getElementById("lives");
-const over=document.getElementById("over");
-const endText=document.getElementById("endText");
+/* ======================================================
+   ELEMENTS
+====================================================== */
+const game = document.getElementById("game");
+const basket = document.getElementById("basket");
+const scoreEl = document.getElementById("score");
+const finalScreen = document.getElementById("finalScreen");
 
-const items=[];
-
-/* ===== PANEL KONTROL ===== */
-let dragging=false;
-panel.addEventListener("touchstart",()=>dragging=true);
-window.addEventListener("touchend",()=>dragging=false);
-window.addEventListener("touchmove",e=>{
-  if(!dragging) return;
-  let x=e.touches[0].clientX-panel.offsetWidth/2;
-  x=Math.max(0,Math.min(innerWidth-panel.offsetWidth,x));
-  panel.style.left=x+"px";
+/* ======================================================
+   BOX INIT
+====================================================== */
+const boxesDiv = document.getElementById("boxes");
+LETTERS.forEach(l => {
+  const b = document.createElement("div");
+  b.className = "box";
+  b.textContent = l;
+  boxesDiv.appendChild(b);
+  boxes[l] = { el: b, filled: false };
 });
 
-/* ===== YARDIMCI ===== */
-function updateLives(){
-  livesEl.textContent="❤️".repeat(lives);
-}
-function collide(a,b){
-  return !(a.right<b.left||a.left>b.right||a.bottom<b.top||a.top>b.bottom);
-}
+/* ======================================================
+   INPUT (SEPET)
+====================================================== */
+let basketX = window.innerWidth / 2;
 
-/* ===== SPAWN ===== */
-function spawn(type){
-  if(!running) return;
-
-  const el=document.createElement("div");
-  el.className="item "+type;
-  el.y=-40;
-  el.x=Math.random()*(innerWidth-40);
-  el.speed=type==="meteor"?3:2;
-  el.style.left=el.x+"px";
-
-  document.body.appendChild(el);
-  items.push({el,type});
+function moveBasket(x) {
+  basketX = Math.max(60, Math.min(window.innerWidth - 60, x));
+  basket.style.left = basketX + "px";
 }
 
-/* ===== OYUN DÖNGÜSÜ ===== */
-function loop(){
-  if(!running) return;
+window.addEventListener("mousemove", e => moveBasket(e.clientX));
+window.addEventListener("touchmove", e => {
+  moveBasket(e.touches[0].clientX);
+});
 
-  const pRect=panel.getBoundingClientRect();
+/* ======================================================
+   STAR CREATE
+====================================================== */
+function spawnStar() {
+  if (gameOver) return;
+  if (activeLetters.length === 0) return;
 
-  for(let i=items.length-1;i>=0;i--){
-    const o=items[i];
-    o.el.y+=o.el.speed;
-    o.el.style.top=o.el.y+"px";
-    const r=o.el.getBoundingClientRect();
+  const letter = activeLetters[Math.floor(Math.random() * activeLetters.length)];
+  const el = document.createElement("div");
 
-    if(collide(r,pRect)){
-      if(o.type==="star"){
-        score+=10;
-        scoreEl.textContent=score;
-      }
-      if(o.type==="meteor"){
-        lives--;
-        updateLives();
-        if(lives<=0){
-          running=false;
-          endText.textContent="Kaybettin";
-          over.style.display="flex";
-        }
-      }
-      o.el.remove();
-      items.splice(i,1);
-      continue;
+  el.className = "star";
+  el.textContent = "⭐" + letter;
+  el.style.left = Math.random() * (window.innerWidth - 40) + "px";
+  el.style.top = "-60px";
+
+  game.appendChild(el);
+
+  stars.push({
+    el,
+    letter,
+    x: el.offsetLeft,
+    y: -60
+  });
+}
+
+/* ======================================================
+   COLLISION
+====================================================== */
+function isColliding(star) {
+  const starRect = star.el.getBoundingClientRect();
+  const basketRect = basket.getBoundingClientRect();
+
+  return !(
+    starRect.bottom < basketRect.top ||
+    starRect.top > basketRect.bottom ||
+    starRect.right < basketRect.left ||
+    starRect.left > basketRect.right
+  );
+}
+
+/* ======================================================
+   GAME LOOP
+====================================================== */
+function update() {
+  if (gameOver) return;
+
+  stars.forEach((s, i) => {
+    s.y += speed;
+    s.el.style.top = s.y + "px";
+
+    if (isColliding(s)) {
+      catchStar(s, i);
+    } else if (s.y > window.innerHeight) {
+      removeStar(i);
     }
+  });
 
-    if(o.el.y>innerHeight+60){
-      o.el.remove();
-      items.splice(i,1);
+  requestAnimationFrame(update);
+}
+
+/* ======================================================
+   CATCH LOGIC
+====================================================== */
+function catchStar(star, index) {
+  const box = boxes[star.letter];
+
+  if (!box.filled) {
+    box.filled = true;
+    box.el.classList.add("filled");
+
+    score += 100;
+    scoreEl.textContent = score;
+
+    activeLetters = activeLetters.filter(l => l !== star.letter);
+    speed += 0.3;
+
+    miniCelebrate();
+
+    if (activeLetters.length === 0) {
+      endGame();
     }
   }
 
-  requestAnimationFrame(loop);
+  removeStar(index);
 }
 
-/* ===== ZAMANLAYICILAR ===== */
-setInterval(()=>spawn("star"),900);
-setInterval(()=>spawn("meteor"),1400);
+function removeStar(index) {
+  stars[index].el.remove();
+  stars.splice(index, 1);
+}
 
-updateLives();
-loop();
+/* ======================================================
+   EFFECT
+====================================================== */
+function miniCelebrate() {
+  for (let i = 0; i < 12; i++) {
+    const h = document.createElement("div");
+    h.textContent = "💛";
+    h.style.position = "absolute";
+    h.style.left = Math.random() * window.innerWidth + "px";
+    h.style.top = Math.random() * window.innerHeight + "px";
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 700);
+  }
+}
+
+/* ======================================================
+   END GAME
+====================================================== */
+function endGame() {
+  gameOver = true;
+  finalScreen.style.display = "flex";
+}
+
+/* ======================================================
+   RESTART
+====================================================== */
+function restartGame() {
+  location.reload();
+}
+
+/* ======================================================
+   TIMERS
+====================================================== */
+setInterval(spawnStar, 850);
+update();
 </script>
-
 </body>
 </html>
