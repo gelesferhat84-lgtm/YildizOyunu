@@ -2,57 +2,63 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>⭐ YILDIZ – Void Runner</title>
+<title>YILDIZ – Engine Build v2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{
   width:100%;height:100%;
-  background:#000;overflow:hidden;
-  font-family:system-ui,-apple-system;
-  touch-action:none;
+  background:#000;
+  overflow:hidden;
+  font-family:Arial,Helvetica,sans-serif;
 }
+
 #game{
   position:relative;
-  width:100%;height:100%;
-  background:radial-gradient(circle at top,#0a0f2c,#000);
+  width:100%;
+  height:100%;
+  background:radial-gradient(circle at top,#0b1020,#000);
+  overflow:hidden;
 }
+
+#world{
+  position:absolute;
+  width:3000px;
+  height:100%;
+}
+
 #hud{
-  position:absolute;top:10px;left:10px;right:10px;
-  display:flex;justify-content:space-between;
-  color:#fff;font-size:14px;z-index:10;
+  position:fixed;
+  top:10px;left:10px;right:10px;
+  display:flex;
+  justify-content:space-between;
+  color:#fff;
+  font-size:14px;
+  z-index:20;
 }
-#player{
+
+.player{
+  position:absolute;
+  width:40px;height:40px;
+  border-radius:50%;
+  background:#e6c200;
+}
+
+.enemy{
   position:absolute;
   width:36px;height:36px;
   border-radius:50%;
-  background:gold;
-  box-shadow:0 0 20px gold;
+  background:#b00020;
 }
-.star,.void{
-  position:absolute;border-radius:50%;
-}
-.star{
-  width:20px;height:20px;
-  background:#ffd700;
-  box-shadow:0 0 12px gold;
-}
-.void{
-  width:42px;height:42px;
-  background:#400;
-  box-shadow:0 0 25px red;
-}
-#message{
+
+.ground{
   position:absolute;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  color:white;
-  font-size:22px;
-  text-align:center;
-  pointer-events:none;
-  opacity:0;
-  transition:.4s;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:60px;
+  background:#111;
 }
 </style>
 </head>
@@ -60,189 +66,215 @@ html,body{
 <body>
 <div id="game">
   <div id="hud">
-    <div>⭐ <span id="score">0</span></div>
-    <div>⚡ <span id="energy">100</span></div>
-    <div>😨 <span id="panic">0</span></div>
-    <div>⬆️ Lv <span id="level">1</span></div>
+    <div>Score: <span id="score">0</span></div>
+    <div>Energy: <span id="energy">100</span></div>
   </div>
-  <div id="player"></div>
-  <div id="message"></div>
+
+  <div id="world">
+    <div class="player" id="player"></div>
+    <div class="ground"></div>
+  </div>
 </div>
 
 <script>
-/* ================= CORE CONSTANTS ================= */
-const WORLD={
-  gravity:0.6,
-  friction:0.98,
-  panicLoss:0.35
-};
-const STATE={RUN:"RUN",DEAD:"DEAD"};
+"use strict";
 
-/* ================= ENGINE STATE ================= */
-const Engine={
-  state:STATE.RUN,
+/* ===================== VECTOR ===================== */
+class Vector2{
+  constructor(x=0,y=0){this.x=x;this.y=y}
+  clone(){return new Vector2(this.x,this.y)}
+  add(v){this.x+=v.x;this.y+=v.y;return this}
+  sub(v){this.x-=v.x;this.y-=v.y;return this}
+  mul(s){this.x*=s;this.y*=s;return this}
+  length(){return Math.sqrt(this.x*this.x+this.y*this.y)}
+  normalize(){
+    const l=this.length();
+    if(l>0){this.x/=l;this.y/=l}
+    return this;
+  }
+}
+
+/* ===================== TIME ===================== */
+class Time{
+  constructor(){this.last=performance.now();this.delta=0}
+  update(){
+    const n=performance.now();
+    this.delta=(n-this.last)/1000;
+    if(this.delta>0.033)this.delta=0.033;
+    this.last=n;
+  }
+}
+const time=new Time();
+
+/* ===================== BODY ===================== */
+class Body{
+  constructor(x,y,m=1){
+    this.position=new Vector2(x,y);
+    this.velocity=new Vector2();
+    this.force=new Vector2();
+    this.mass=m;
+    this.invMass=1/m;
+  }
+  applyForce(f){this.force.add(f)}
+  integrate(dt){
+    const acc=this.force.clone().mul(this.invMass);
+    this.velocity.add(acc.mul(dt));
+    this.position.add(this.velocity.clone().mul(dt));
+    this.force.x=0;this.force.y=0;
+  }
+}
+
+/* ===================== WORLD ===================== */
+const World={
+  width:3000,
+  height:window.innerHeight,
+  gravity:new Vector2(0,2000),
+  friction:0.88,
+  ground:60
+};
+
+/* ===================== PLAYER ===================== */
+class Player{
+  constructor(el){
+    this.el=el;
+    this.body=new Body(200,World.height-200,1);
+    this.radius=20;
+    this.speed=2200;
+    this.hp=100;
+  }
+
+  update(dt,inputX){
+    const dx=inputX+camera.x-this.body.position.x;
+    this.body.applyForce(new Vector2(dx*6,0));
+    this.body.applyForce(World.gravity.clone());
+
+    this.body.integrate(dt);
+    this.body.velocity.x*=World.friction;
+
+    const gy=World.height-World.ground-this.radius;
+    if(this.body.position.y>gy){
+      this.body.position.y=gy;
+      this.body.velocity.y=0;
+    }
+  }
+
+  render(){
+    this.el.style.transform=
+      `translate(${this.body.position.x-this.radius}px,
+                 ${this.body.position.y-this.radius}px)`;
+  }
+}
+
+/* ===================== ENEMY ===================== */
+class Enemy{
+  constructor(x){
+    this.el=document.createElement("div");
+    this.el.className="enemy";
+    world.appendChild(this.el);
+    this.body=new Body(x,World.height-200,1);
+    this.radius=18;
+    this.alive=true;
+  }
+
+  update(dt){
+    const dir=player.body.position.clone()
+      .sub(this.body.position).normalize();
+    this.body.applyForce(dir.mul(1200));
+    this.body.applyForce(World.gravity.clone());
+    this.body.integrate(dt);
+    this.body.velocity.x*=0.9;
+
+    const gy=World.height-World.ground-this.radius;
+    if(this.body.position.y>gy){
+      this.body.position.y=gy;
+      this.body.velocity.y=0;
+    }
+
+    const d=this.body.position.clone()
+      .sub(player.body.position).length();
+    if(d<this.radius+player.radius){
+      Game.energy-=20;
+      this.destroy();
+    }
+  }
+
+  render(){
+    this.el.style.transform=
+      `translate(${this.body.position.x-this.radius}px,
+                 ${this.body.position.y-this.radius}px)`;
+  }
+
+  destroy(){
+    this.alive=false;
+    this.el.remove();
+    Game.score+=10;
+  }
+}
+
+/* ===================== CAMERA ===================== */
+const camera={
+  x:0,
+  update(){
+    this.x=player.body.position.x-window.innerWidth/2;
+    if(this.x<0)this.x=0;
+    if(this.x>World.width-window.innerWidth)
+      this.x=World.width-window.innerWidth;
+    world.style.transform=`translateX(${-this.x}px)`;
+  }
+};
+
+/* ===================== INPUT ===================== */
+let inputX=window.innerWidth/2;
+window.addEventListener("mousemove",e=>inputX=e.clientX);
+window.addEventListener("touchmove",e=>{
+  inputX=e.touches[0].clientX;
+});
+
+/* ===================== GAME ===================== */
+const Game={
   score:0,
   energy:100,
-  panic:0,
-  time:0,
-  level:1,
-  exp:0,
-  nextExp:100
+  running:true
 };
 
-/* ================= PLAYER BODY ================= */
-const player={
-  x:innerWidth/2,
-  y:innerHeight-120,
-  vx:0,vy:0,
-  r:18
-};
-const playerEl=document.getElementById("player");
+const world=document.getElementById("world");
+const player=new Player(document.getElementById("player"));
+const enemies=[];
 
-/* ================= INPUT ================= */
-let inputX=player.x;
-addEventListener("mousemove",e=>inputX=e.clientX);
-addEventListener("touchmove",e=>inputX=e.touches[0].clientX);
-
-/* ================= OBJECT POOLS ================= */
-const stars=[],voids=[];
-const spawn={star:1200,void:2000};
-
-/* ================= SPAWNERS ================= */
-setInterval(()=>Engine.state===STATE.RUN&&spawnStar(),spawn.star);
-setInterval(()=>Engine.state===STATE.RUN&&spawnVoid(),spawn.void);
-
-function spawnStar(){
-  stars.push({x:Math.random()*innerWidth,y:-20});
-}
-function spawnVoid(){
-  voids.push({x:Math.random()*innerWidth,y:-40});
+/* spawn enemies */
+for(let i=1;i<=10;i++){
+  enemies.push(new Enemy(400+i*220));
 }
 
-/* ================= MISSIONS ================= */
-let mission=null,startScore=0,startTime=0;
-const missions=[
-  {t:"3 yıldız topla",c:()=>Engine.score>=startScore+30,r:()=>gainExp(40)},
-  {t:"Panik 10'a çıkmasın",c:()=>Engine.panic<10&&Engine.time>startTime+600,r:()=>gainExp(60)},
-  {t:"Enerji %80 üstü",c:()=>Engine.energy>80&&Engine.time>startTime+500,r:()=>gainExp(50)}
-];
+/* ===================== LOOP ===================== */
+function loop(){
+  time.update();
+  if(!Game.running)return;
 
-/* ================= GAME LOOP ================= */
-function update(){
-  if(Engine.state!==STATE.RUN)return;
-  Engine.time++;
+  player.update(time.delta,inputX);
+  player.render();
 
-  // kontrol + panik bozulması
-  const loss=Engine.panic*WORLD.panicLoss;
-  const target=inputX+(Math.random()-.5)*loss;
-  player.vx+=(target-player.x)*0.02;
-  player.vx*=WORLD.friction;
-  player.vy+=WORLD.gravity;
-
-  player.x+=player.vx;
-  player.y+=player.vy;
-
-  if(player.y>innerHeight-80){
-    player.y=innerHeight-80;
-    player.vy=0;
-  }
-
-  // enerji
-  Engine.energy-=0.02+Engine.panic*0.01;
-  if(Engine.energy<=0)die();
-
-  // yıldızlar
-  stars.forEach((s,i)=>{
-    s.y+=2;
-    if(dist(s,player)<player.r+10){
-      Engine.score+=10;
-      Engine.energy=Math.min(100,Engine.energy+10);
-      Engine.panic=Math.max(0,Engine.panic-1);
-      gainExp(10);
-      stars.splice(i,1);
+  enemies.forEach(e=>{
+    if(e.alive){
+      e.update(time.delta);
+      e.render();
     }
   });
 
-  // voidler
-  voids.forEach((v,i)=>{
-    v.y+=3;
-    if(dist(v,player)<player.r+20){
-      Engine.panic+=5;
-      Engine.energy-=15;
-      voids.splice(i,1);
-    }
-  });
+  camera.update();
 
-  // görev
-  if(!mission){
-    mission=missions[Math.floor(Math.random()*missions.length)];
-    startScore=Engine.score;
-    startTime=Engine.time;
-    msg("🎯 "+mission.t);
-  }else if(mission.c()){
-    mission.r();
-    msg("✅ Görev tamamlandı");
-    mission=null;
+  Game.energy-=time.delta*3;
+  if(Game.energy<=0){
+    Game.running=false;
+    alert("GAME OVER");
   }
 
-  render();
-  requestAnimationFrame(update);
+  score.textContent=Game.score;
+  energy.textContent=Game.energy.toFixed(0);
+
+  requestAnimationFrame(loop);
 }
-
-/* ================= LEVEL ================= */
-function gainExp(x){
-  Engine.exp+=x;
-  if(Engine.exp>=Engine.nextExp){
-    Engine.level++;
-    Engine.exp=0;
-    Engine.nextExp=Math.floor(Engine.nextExp*1.4);
-    WORLD.gravity+=0.05;
-    spawn.star*=0.95;
-    spawn.void*=0.9;
-    Engine.energy=Math.min(100,Engine.energy+20);
-    Engine.panic=Math.max(0,Engine.panic-5);
-    msg("⬆️ LEVEL "+Engine.level);
-  }
-}
-
-/* ================= RENDER ================= */
-function render(){
-  playerEl.style.transform=
-    `translate(${player.x-player.r}px,${player.y-player.r}px)`;
-
-  score.textContent=Engine.score;
-  energy.textContent=Engine.energy.toFixed(0);
-  panic.textContent=Engine.panic.toFixed(0);
-  level.textContent=Engine.level;
-
-  document.querySelectorAll(".star,.void").forEach(e=>e.remove());
-  stars.forEach(s=>{
-    const e=document.createElement("div");
-    e.className="star";
-    e.style.transform=`translate(${s.x}px,${s.y}px)`;
-    game.appendChild(e);
-  });
-  voids.forEach(v=>{
-    const e=document.createElement("div");
-    e.className="void";
-    e.style.transform=`translate(${v.x}px,${v.y}px)`;
-    game.appendChild(e);
-  });
-}
-
-/* ================= HELPERS ================= */
-function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
-function msg(t){
-  message.textContent=t;
-  message.style.opacity=1;
-  setTimeout(()=>message.style.opacity=0,1500);
-}
-function die(){
-  Engine.state=STATE.DEAD;
-  alert("💀 Kaçamadın\nSkor: "+Engine.score+"\nLevel: "+Engine.level);
-}
-
-update();
+loop();
 </script>
 </body>
 </html>
